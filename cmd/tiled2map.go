@@ -4,6 +4,8 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	
+	"github.com/laghoule/tiled2map/internal/pkg/tiled"
 )
 
 var (
@@ -17,13 +19,13 @@ func main() {
 	debug := flag.Bool("debug", false, "Enable debug mode to print additional information")
 	flag.Parse()
 
-	m, err := NewMap(*mapFile)
+	m, err := tiled.NewMap(*mapFile)
 	if err != nil {
 		exitWithError(err)
 	}
 
-	allGIDs := getUniqueGID(m.Layers)
-	tilesInfo := getTilesInfo(allGIDs, m.TileSets)
+	allGIDs := tiled.GetUniqueGID(m.Layers)
+	tilesInfo := tiled.GetTilesInfo(allGIDs, m.TileSets)
 
 	if *debug {
 		for _, tileInfo := range tilesInfo {

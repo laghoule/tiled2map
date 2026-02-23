@@ -1,4 +1,4 @@
-package main
+package tiled
 
 import (
 	"encoding/json"
@@ -96,8 +96,8 @@ func getTileProperties(localID int, tileset *TileSet) []Tile {
 	return tiles
 }
 
-// gettUniqueGID retrieves all unique GIDs used in the map layers, excluding GID 0 which represents empty tiles
-func getUniqueGID(layers []Layer) []int {
+// GettUniqueGID retrieves all unique GIDs used in the map layers, excluding GID 0 which represents empty tiles
+func GetUniqueGID(layers []Layer) []int {
 	uniqueGID := make(map[int]bool)
 
 	for _, layer := range layers {

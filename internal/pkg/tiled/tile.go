@@ -1,4 +1,4 @@
-package main
+package tiled
 
 // TileInfo represents the information about a tile, including its source image and position in the tileset,
 // as well as any custom properties defined in the Tiled map
@@ -24,8 +24,8 @@ func findTileSet(gid int, tileSet []TileSet) *TileSet {
 	return best
 }
 
-// getTilesInfo retrieves the tile information for each unique GID, including the source image and position in the tileset
-func getTilesInfo(allGIDs []int, tilesSet []TileSet) []TileInfo {
+// GetTilesInfo retrieves the tile information for each unique GID, including the source image and position in the tileset
+func GetTilesInfo(allGIDs []int, tilesSet []TileSet) []TileInfo {
 	tilesInfo := []TileInfo{}
 
 	for _, gid := range allGIDs {
