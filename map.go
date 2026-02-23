@@ -4,6 +4,13 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"strings"
+)
+
+const (
+	backgroundLayerName = "bg"
+	foregroundLayerName = "fg"
+	boundLayerName      = "bound"
 )
 
 // REF: https://doc.mapeditor.org/en/stable/reference/json-map-format/#
@@ -34,10 +41,24 @@ type TileSet struct {
 	Name             string `json:"name"`
 	Image            string `json:"image"`
 	Columns          int    `json:"columns"`
+	Tiles            []Tile `json:"tiles"`
 	TileHeight       int    `json:"tileheight"`
 	TileWidth        int    `json:"tilewidth"`
 	TileCount        int    `json:"tilecount"`
 	TransparentColor string `json:"transparentcolor"`
+}
+
+// Tile represents a tile in the tileset, including its properties
+type Tile struct {
+	ID         int        `json:"id"`
+	Properties []Property `json:"properties"`
+}
+
+// Property represents a custom property of a tile, which can be of any type (string, int, bool, etc.)
+type Property struct {
+	Name  string `json:"name"`
+	Type  string `json:"type"`
+	Value any    `json:"value"`
 }
 
 // NewMap reads a Tiled map file in JSON format and unmarshals it into a Map struct
@@ -55,9 +76,30 @@ func NewMap(mapFile string) (*Map, error) {
 	return m, nil
 }
 
+// getProperties retrieves the properties of a tile based on its localID by finding the corresponding tileset and tile information
+func getTileProperties(localID int, tileset *TileSet) []Tile {
+	tiles := []Tile{}
+
+	for _, tile := range tileset.Tiles {
+		if tile.ID != localID {
+			continue
+		}
+
+		if len(tile.Properties) > 0 {
+			tiles = append(tiles, Tile{
+				ID:         tile.ID,
+				Properties: tile.Properties,
+			})
+		}
+	}
+
+	return tiles
+}
+
 // gettUniqueGID retrieves all unique GIDs used in the map layers, excluding GID 0 which represents empty tiles
 func getUniqueGID(layers []Layer) []int {
 	uniqueGID := make(map[int]bool)
+
 	for _, layer := range layers {
 		for _, gid := range layer.Data {
 			if gid != 0 {
@@ -72,4 +114,20 @@ func getUniqueGID(layers []Layer) []int {
 	}
 
 	return gids
+}
+
+// validate checks if the map contains the required layers (background and foreground) and that their names are valid
+func (m *Map) validate() error {
+	if len(m.Layers) == 0 {
+		return fmt.Errorf("map must contain 2 or 3 layer: %s, %s, %s (optional)", backgroundLayerName, foregroundLayerName, boundLayerName)
+	}
+
+	for _, layer := range m.Layers {
+		name := strings.ToLower(layer.Name)
+		if name != backgroundLayerName && name != foregroundLayerName {
+			return fmt.Errorf("invalid layer name: %s, expected '%s' or '%s'", layer.Name, backgroundLayerName, foregroundLayerName)
+		}
+	}
+
+	return nil
 }

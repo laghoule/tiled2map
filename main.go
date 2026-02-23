@@ -14,6 +14,7 @@ var (
 func main() {
 	fmt.Printf("tile2map version: %s, git commit: %s\n", version, gitCommit)
 	mapFile := flag.String("map", "", "Path to the Tiled map file (JSON format)")
+	debug := flag.Bool("debug", false, "Enable debug mode to print additional information")
 	flag.Parse()
 
 	m, err := NewMap(*mapFile)
@@ -24,9 +25,12 @@ func main() {
 	allGIDs := getUniqueGID(m.Layers)
 	tilesInfo := getTilesInfo(allGIDs, m.TileSets)
 
-	for _, tileInfo := range tilesInfo {
-		fmt.Printf("Tile GID: %d, Source Image: %s, Local ID: %d, X: %d, Y: %d\n",
-			tileInfo.GID, tileInfo.SourceImage, tileInfo.LocalID, tileInfo.X, tileInfo.Y)
+	if *debug {
+		for _, tileInfo := range tilesInfo {
+			fmt.Printf("Tile GID: %d\n Source Image: %s, Local ID: %d, X: %d, Y: %d\n Tiles: %v\n",
+				tileInfo.GID, tileInfo.SourceImage, tileInfo.LocalID, tileInfo.X, tileInfo.Y, tileInfo.Tiles)
+			fmt.Println()
+		}
 	}
 }
 
