@@ -73,6 +73,10 @@ func NewMap(mapFile string) (*Map, error) {
 		return nil, fmt.Errorf("failed to parse map file: %v", err)
 	}
 
+	if err := m.validate(); err != nil {
+		return nil, fmt.Errorf("map validation failed: %v", err)
+	}
+
 	return m, nil
 }
 
@@ -124,6 +128,9 @@ func (m *Map) validate() error {
 
 	for _, layer := range m.Layers {
 		name := strings.ToLower(layer.Name)
+		if name == boundLayerName {
+			continue
+		}
 		if name != backgroundLayerName && name != foregroundLayerName {
 			return fmt.Errorf("invalid layer name: %s, expected '%s' or '%s'", layer.Name, backgroundLayerName, foregroundLayerName)
 		}

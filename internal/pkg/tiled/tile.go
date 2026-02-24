@@ -2,12 +2,20 @@ package tiled
 
 // TileInfo represents the information about a tile, including its source image and position in the tileset,
 // as well as any custom properties defined in the Tiled map
+// TODO: Implement sort
 type TileInfo struct {
 	SourceImage string
 	GID         int
 	LocalID     int
+	Dimension   Dimension
 	X, Y        int
 	Tiles       []Tile
+}
+
+// Dimension represents the width and height of a tile
+type Dimension struct {
+	Width  int
+	Height int
 }
 
 // findTileSet finds the appropriate tileset for a given GID
@@ -29,6 +37,10 @@ func GetTilesInfo(allGIDs []int, tilesSet []TileSet) []TileInfo {
 	tilesInfo := []TileInfo{}
 
 	for _, gid := range allGIDs {
+		if gid == 0 {
+			continue
+		}
+		
 		ts := findTileSet(gid, tilesSet)
 
 		if ts != nil {
@@ -38,6 +50,7 @@ func GetTilesInfo(allGIDs []int, tilesSet []TileSet) []TileInfo {
 				SourceImage: ts.Image,
 				GID:         gid,
 				LocalID:     localID,
+				Dimension:   Dimension{Width: ts.TileWidth, Height: ts.TileHeight},
 				X:           localID % ts.Columns * ts.TileWidth,
 				Y:           localID / ts.Columns * ts.TileHeight,
 				Tiles:       tiles,
