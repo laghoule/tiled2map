@@ -4,7 +4,8 @@ import (
 	"flag"
 	"fmt"
 	"os"
-	
+
+	"github.com/laghoule/tiled2map/internal/pkg/atlas"
 	"github.com/laghoule/tiled2map/internal/pkg/tiled"
 )
 
@@ -33,6 +34,16 @@ func main() {
 				tileInfo.GID, tileInfo.SourceImage, tileInfo.LocalID, tileInfo.X, tileInfo.Y, tileInfo.Tiles)
 			fmt.Println()
 		}
+	}
+
+	master, err := atlas.NewMaster(tilesInfo)
+	if err != nil {
+		exitWithError(err)
+	}
+
+	err = master.Save("master.png")
+	if err != nil {
+		exitWithError(err)
 	}
 }
 
