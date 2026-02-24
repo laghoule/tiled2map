@@ -2,3 +2,4 @@ tiled2map
 *.map
 *.inc
 *.png
+/map.json
