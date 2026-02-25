@@ -31,13 +31,14 @@ func NewMaster(tiles []tiled.TileInfo) (*Master, error) {
 	rawBytes := make([]byte, width*height)
 	imageCache := make(map[string]image.Image)
 
-	// Get the palette from the first tile's source image
-	palette, err := getPalette(tiles[0].SourceImage)
+	// Get the palette from the first png image
+	firstTilePal, err := getPaletteFromPNG(tiles[0].SourceImage)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get palette: %v", err)
 	}
 
-	masterImg.Palette = palette.Palette
+	// Set the palette of the master image to match the first tile's palette
+	masterImg.Palette = firstTilePal.Palette
 
 	for i, tile := range tiles {
 		src, err := getOrLoadImage(tile.SourceImage, imageCache)
@@ -45,12 +46,19 @@ func NewMaster(tiles []tiled.TileInfo) (*Master, error) {
 			return nil, fmt.Errorf("failed to load image: %v", err)
 		}
 
-		// TODO: All tile must have the same palette
+		tilePal, ok := src.(*image.Paletted)
+		if !ok {
+			return nil, fmt.Errorf("source image is not a paletted image")
+		}
 
-		// extract tile
+		if !arePaletteEqual(firstTilePal, tilePal) {
+			return nil, fmt.Errorf("each tile must have the same palette. Tile %d has a different palette", i)
+		}
+
+		// extract tile from the image
 		tileRect := image.Rect(tile.X, tile.Y, tile.X+width, tile.Y+height)
 
-		// destination point in the master image
+		// calculate the destination rectangle for the tile in the master image
 		destRect := image.Rect(0, i*height, width, (i+tileSpacing)*height)
 
 		// draw the tile onto the master image
@@ -63,34 +71,9 @@ func NewMaster(tiles []tiled.TileInfo) (*Master, error) {
 	}, nil
 }
 
-// getPalette loads the image from the specified source and returns its palette
-func getPalette(imgSrc string) (image.Paletted, error) {
-	imgFile, err := os.Open(imgSrc)
-	if err != nil {
-		return image.Paletted{}, fmt.Errorf("failed to open image file: %v", err)
-	}
-	defer imgFile.Close()
-
-	img, _, err := image.Decode(imgFile)
-	if err != nil {
-		return image.Paletted{}, fmt.Errorf("failed to decode image file: %v", err)
-	}
-
-	return *img.(*image.Paletted), nil
-}
-
-// getTileDimension returns the width and height of a tile based on its dimension information
-func getTileDimension(tile tiled.TileInfo) (int, int) {
-	return tile.Dimension.Width, tile.Dimension.Height
-}
-
-// getOrLoadImage retrieves the image from the cache if it exists, or loads it from the file system if it doesn't
-func getOrLoadImage(imgSrc string, imageCache map[string]image.Image) (image.Image, error) {
-	if img, exists := imageCache[imgSrc]; exists {
-		return img, nil
-	}
-
-	imgFile, err := os.Open(imgSrc)
+// getPaletteFromPNG loads the image from the specified source and returns its palette
+func getPaletteFromPNG(imgPath string) (*image.Paletted, error) {
+	imgFile, err := os.Open(imgPath)
 	if err != nil {
 		return nil, fmt.Errorf("failed to open image file: %v", err)
 	}
@@ -101,20 +84,63 @@ func getOrLoadImage(imgSrc string, imageCache map[string]image.Image) (image.Ima
 		return nil, fmt.Errorf("failed to decode image file: %v", err)
 	}
 
-	imageCache[imgSrc] = img
+	return img.(*image.Paletted), nil
+}
+
+// arePaletteEqual compares two palettes and returns true if they are equal, false otherwise
+func arePaletteEqual(p1, p2 *image.Paletted) bool {
+	if len(p1.Palette) != len(p2.Palette) {
+		return false
+	}
+
+	for i := range p1.Palette {
+		r1, g1, b1, _ := p1.Palette[i].RGBA()
+		r2, g2, b2, _ := p2.Palette[i].RGBA()
+
+		if r1 != r2 || g1 != g2 || b1 != b2 {
+			return false
+		}
+	}
+
+	return true
+}
+
+// getTileDimension returns the width and height of a tile based on its dimension information
+func getTileDimension(tile tiled.TileInfo) (int, int) {
+	return tile.Dimension.Width, tile.Dimension.Height
+}
+
+// getOrLoadImage retrieves the image from the cache if it exists, or loads it from the file system if it doesn't
+func getOrLoadImage(imgPath string, imageCache map[string]image.Image) (image.Image, error) {
+	if img, exists := imageCache[imgPath]; exists {
+		return img, nil
+	}
+
+	imgFile, err := os.Open(imgPath)
+	if err != nil {
+		return nil, fmt.Errorf("failed to open image file: %v", err)
+	}
+	defer imgFile.Close()
+
+	img, _, err := image.Decode(imgFile)
+	if err != nil {
+		return nil, fmt.Errorf("failed to decode image file: %v", err)
+	}
+
+	imageCache[imgPath] = img
 
 	return img, nil
 }
 
 // Save saves the master image to a file in PNG format.
 func (m *Master) Save(filename string) error {
-	outFile, err := os.Create(filename)
+	masterFile, err := os.Create(filename)
 	if err != nil {
 		return fmt.Errorf("failed to create master file: %v", err)
 	}
-	defer outFile.Close()
+	defer masterFile.Close()
 
-	if err := png.Encode(outFile, m.Image); err != nil {
+	if err := png.Encode(masterFile, m.Image); err != nil {
 		return fmt.Errorf("failed to encode master image: %v", err)
 	}
 
