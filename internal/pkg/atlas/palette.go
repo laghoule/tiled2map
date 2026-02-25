@@ -2,8 +2,9 @@ package atlas
 
 import (
 	"fmt"
-	"os"
 	"image"
+	"image/color"
+	"os"
 )
 
 // getPaletteFromPNG loads the image from the specified source and returns its palette
@@ -23,14 +24,14 @@ func getPaletteFromPNG(imgPath string) (*image.Paletted, error) {
 }
 
 // arePaletteEqual compares two palettes and returns true if they are equal, false otherwise
-func arePaletteEqual(p1, p2 *image.Paletted) bool {
-	if len(p1.Palette) != len(p2.Palette) {
+func arePaletteEqual(p1, p2 color.Palette) bool {
+	if len(p1) != len(p2) {
 		return false
 	}
 
-	for i := range p1.Palette {
-		r1, g1, b1, _ := p1.Palette[i].RGBA()
-		r2, g2, b2, _ := p2.Palette[i].RGBA()
+	for i := range p1 {
+		r1, g1, b1, _ := p1[i].RGBA()
+		r2, g2, b2, _ := p2[i].RGBA()
 
 		if r1 != r2 || g1 != g2 || b1 != b2 {
 			return false

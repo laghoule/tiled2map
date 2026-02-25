@@ -40,11 +40,12 @@ func main() {
 	if err != nil {
 		exitWithError(err)
 	}
-
-	err = master.Save("master.png")
+	
+	err = master.CreateAndSave("master.png")
 	if err != nil {
 		exitWithError(err)
 	}
+	
 }
 
 // exitWithError prints the error message to standard error and exits the program with a non-zero status code

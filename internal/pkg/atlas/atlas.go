@@ -3,6 +3,7 @@ package atlas
 import (
 	"fmt"
 	"image"
+	"image/color"
 	"image/draw"
 	"image/png"
 	_ "image/png"
@@ -18,19 +19,26 @@ const (
 
 // Master represents the master image that contains all the tiles from the Tiled map. It includes the image itself and the raw byte data of the image.
 type Master struct {
-	Image    *image.Paletted
-	RawImage []byte
+	Tiles     []tiled.TileInfo
+	Image     *image.Paletted
+	Palette   color.Palette
+	TileCount int
+	Dimension Dimension
 }
 
+// Dimension represents the width and height of a tile
+type Dimension struct {
+	Width  int
+	Height int
+}
+
+// TODO: decouple
 func NewMaster(tiles []tiled.TileInfo) (*Master, error) {
 	width, height := getTileDimension(tiles[0])
 
-	count := len(tiles)
-	masterRect := image.Rect(0, 0, width, height*count)
+	tilesCount := len(tiles)
+	masterRect := image.Rect(0, 0, width, height*tilesCount)
 	masterImg := image.NewPaletted(masterRect, nil)
-
-	rawBytes := make([]byte, width*height)
-	imageCache := make(map[string]image.Image)
 
 	// Get the palette from the first png image
 	firstTilePal, err := getPaletteFromPNG(tiles[0].SourceImage)
@@ -41,40 +49,68 @@ func NewMaster(tiles []tiled.TileInfo) (*Master, error) {
 	// Set the palette of the master image to match the first tile's palette
 	masterImg.Palette = firstTilePal.Palette
 
+	return &Master{
+		Tiles:     tiles,
+		Image:     masterImg,
+		TileCount: tilesCount,
+		Palette:   firstTilePal.Palette,
+		Dimension: Dimension{
+			Width:  width,
+			Height: height,
+		},
+	}, nil
+}
+
+// CreateAndSave creates the master image and saves it to a file in PNG format.
+func (m *Master) CreateAndSave(filename string) error {
+	if err := m.Create(); err != nil {
+		return err
+	}
+
+	if err := m.Save(filename); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// Create generates the master image by drawing each tile onto it.
+func (m *Master) Create() error {
+	m.Image.Palette = m.Palette
+
 	// Ensure that all tiles are sorted by GID to maintain a consistent order in the master image
-	sort.Slice(tiles, func(i, j int) bool {
-		return tiles[i].GID < tiles[j].GID
+	sort.Slice(m.Tiles, func(i, j int) bool {
+		return m.Tiles[i].GID < m.Tiles[j].GID
 	})
 
-	for i, tile := range tiles {
+	imageCache := make(map[string]image.Image)
+
+	for i, tile := range m.Tiles {
 		src, err := getOrLoadImage(tile.SourceImage, imageCache)
 		if err != nil {
-			return nil, fmt.Errorf("failed to load image: %v", err)
+			return fmt.Errorf("failed to load image: %v", err)
 		}
 
-		tilePal, ok := src.(*image.Paletted)
+		tilePalleted, ok := src.(*image.Paletted)
 		if !ok {
-			return nil, fmt.Errorf("source image is not a paletted image")
+			return fmt.Errorf("tile %d is not a paletted image", i)
 		}
 
-		if !arePaletteEqual(firstTilePal, tilePal) {
-			return nil, fmt.Errorf("each tile must have the same palette. Tile %d has a different palette", i)
+		if !arePaletteEqual(m.Palette, tilePalleted.Palette) {
+			return fmt.Errorf("each tile must have the same palette. Tile %d has a different palette", i)
 		}
 
 		// extract tile from the image
-		tileRect := image.Rect(tile.X, tile.Y, tile.X+width, tile.Y+height)
+		tileRect := image.Rect(tile.X, tile.Y, tile.X+m.Dimension.Width, tile.Y+m.Dimension.Height)
 
 		// calculate the destination rectangle for the tile in the master image
-		destRect := image.Rect(0, i*height, width, (i+tileSpacing)*height)
+		destRect := image.Rect(0, i*m.Dimension.Height, m.Dimension.Width, (i+tileSpacing)*m.Dimension.Height)
 
 		// draw the tile onto the master image
-		draw.Draw(masterImg, destRect, src, tileRect.Min, draw.Src)
+		draw.Draw(m.Image, destRect, src, tileRect.Min, draw.Src)
 	}
 
-	return &Master{
-		Image:    masterImg,
-		RawImage: rawBytes,
-	}, nil
+	return nil
 }
 
 // getTileDimension returns the width and height of a tile based on its dimension information
