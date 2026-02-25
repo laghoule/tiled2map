@@ -7,6 +7,7 @@ import (
 	"image/png"
 	_ "image/png"
 	"os"
+	"sort"
 
 	"github.com/laghoule/tiled2map/internal/pkg/tiled"
 )
@@ -39,6 +40,11 @@ func NewMaster(tiles []tiled.TileInfo) (*Master, error) {
 
 	// Set the palette of the master image to match the first tile's palette
 	masterImg.Palette = firstTilePal.Palette
+
+	// Ensure that all tiles are sorted by GID to maintain a consistent order in the master image
+	sort.Slice(tiles, func(i, j int) bool {
+		return tiles[i].GID < tiles[j].GID
+	})
 
 	for i, tile := range tiles {
 		src, err := getOrLoadImage(tile.SourceImage, imageCache)
