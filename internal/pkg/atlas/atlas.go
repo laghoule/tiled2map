@@ -63,11 +63,11 @@ func NewMaster(tiles []tiled.TileInfo) (*Master, error) {
 
 // CreateAndSave creates the master image and saves it to a file in PNG format.
 func (m *Master) CreateAndSave(filename string) error {
-	if err := m.Create(); err != nil {
+	if err := m.create(); err != nil {
 		return err
 	}
 
-	if err := m.Save(filename); err != nil {
+	if err := m.save(filename); err != nil {
 		return err
 	}
 
@@ -75,7 +75,7 @@ func (m *Master) CreateAndSave(filename string) error {
 }
 
 // Create generates the master image by drawing each tile onto it.
-func (m *Master) Create() error {
+func (m *Master) create() error {
 	m.Image.Palette = m.Palette
 
 	// Ensure that all tiles are sorted by GID to maintain a consistent order in the master image
@@ -141,7 +141,7 @@ func getOrLoadImage(imgPath string, imageCache map[string]image.Image) (image.Im
 }
 
 // Save saves the master image to a file in PNG format.
-func (m *Master) Save(filename string) error {
+func (m *Master) save(filename string) error {
 	masterFile, err := os.Create(filename)
 	if err != nil {
 		return fmt.Errorf("failed to create master file: %v", err)
