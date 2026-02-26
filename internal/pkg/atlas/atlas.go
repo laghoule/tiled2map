@@ -4,11 +4,8 @@ import (
 	"fmt"
 	"image"
 	"image/color"
-	"image/draw"
-	"image/png"
 	_ "image/png"
 	"os"
-	"sort"
 
 	"github.com/laghoule/tiled2map/internal/pkg/tiled"
 )
@@ -21,6 +18,7 @@ const (
 type Master struct {
 	Tiles     []tiled.TileInfo
 	Image     *image.Paletted
+	RawImage  []byte
 	Palette   color.Palette
 	TileCount int
 	Dimension Dimension
@@ -32,7 +30,7 @@ type Dimension struct {
 	Height int
 }
 
-// TODO: decouple
+// NewMaster creates a new Master instance with the given tiles.
 func NewMaster(tiles []tiled.TileInfo) (*Master, error) {
 	width, height := getTileDimension(tiles[0])
 
@@ -52,6 +50,7 @@ func NewMaster(tiles []tiled.TileInfo) (*Master, error) {
 	return &Master{
 		Tiles:     tiles,
 		Image:     masterImg,
+		RawImage:  []byte{},
 		TileCount: tilesCount,
 		Palette:   firstTilePal.Palette,
 		Dimension: Dimension{
@@ -62,52 +61,17 @@ func NewMaster(tiles []tiled.TileInfo) (*Master, error) {
 }
 
 // CreateAndSave creates the master image and saves it to a file in PNG format.
-func (m *Master) CreateAndSave(filename string) error {
-	if err := m.create(); err != nil {
+func (m *Master) CreateAndSave(filePrefix string) error {
+	if err := m.createIMG(); err != nil {
 		return err
 	}
 
-	if err := m.save(filename); err != nil {
+	if err := m.savePNG(filePrefix); err != nil {
 		return err
 	}
-
-	return nil
-}
-
-// Create generates the master image by drawing each tile onto it.
-func (m *Master) create() error {
-	m.Image.Palette = m.Palette
-
-	// Ensure that all tiles are sorted by GID to maintain a consistent order in the master image
-	sort.Slice(m.Tiles, func(i, j int) bool {
-		return m.Tiles[i].GID < m.Tiles[j].GID
-	})
-
-	imageCache := make(map[string]image.Image)
-
-	for i, tile := range m.Tiles {
-		src, err := getOrLoadImage(tile.SourceImage, imageCache)
-		if err != nil {
-			return fmt.Errorf("failed to load image: %v", err)
-		}
-
-		tilePalleted, ok := src.(*image.Paletted)
-		if !ok {
-			return fmt.Errorf("tile %d is not a paletted image", i)
-		}
-
-		if !arePaletteEqual(m.Palette, tilePalleted.Palette) {
-			return fmt.Errorf("each tile must have the same palette. Tile %d has a different palette", i)
-		}
-
-		// extract tile from the image
-		tileRect := image.Rect(tile.X, tile.Y, tile.X+m.Dimension.Width, tile.Y+m.Dimension.Height)
-
-		// calculate the destination rectangle for the tile in the master image
-		destRect := image.Rect(0, i*m.Dimension.Height, m.Dimension.Width, (i+tileSpacing)*m.Dimension.Height)
-
-		// draw the tile onto the master image
-		draw.Draw(m.Image, destRect, src, tileRect.Min, draw.Src)
+	
+	if err := m.saveTIL(filePrefix); err != nil {
+		return err
 	}
 
 	return nil
@@ -138,19 +102,4 @@ func getOrLoadImage(imgPath string, imageCache map[string]image.Image) (image.Im
 	imageCache[imgPath] = img
 
 	return img, nil
-}
-
-// Save saves the master image to a file in PNG format.
-func (m *Master) save(filename string) error {
-	masterFile, err := os.Create(filename)
-	if err != nil {
-		return fmt.Errorf("failed to create master file: %v", err)
-	}
-	defer masterFile.Close()
-
-	if err := png.Encode(masterFile, m.Image); err != nil {
-		return fmt.Errorf("failed to encode master image: %v", err)
-	}
-
-	return nil
 }

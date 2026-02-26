@@ -41,7 +41,7 @@ func main() {
 		exitWithError(err)
 	}
 	
-	err = master.CreateAndSave("master.png")
+	err = master.CreateAndSave("master_tile")
 	if err != nil {
 		exitWithError(err)
 	}
