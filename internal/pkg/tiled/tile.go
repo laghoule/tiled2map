@@ -36,8 +36,8 @@ func findTileSet(gid int, tileSet []TileSet) *TileSet {
 	return best
 }
 
-// GetTilesInfo retrieves the tile information for each unique GID, including the source image and position in the tileset
-func GetTilesInfo(allGIDs []int, tilesSet []TileSet) []TileInfo {
+// GetSortedTilesInfo returns a sorted slice of TileInfo objects for the given GIDs and tilesets
+func GetSortedTilesInfo(allGIDs []int, tilesSet []TileSet) []TileInfo {
 	tilesInfo := []TileInfo{}
 
 	for _, gid := range allGIDs {

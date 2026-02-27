@@ -26,7 +26,7 @@ func main() {
 	}
 
 	allGIDs := tiled.GetUniqueGID(m.Layers)
-	tilesInfo := tiled.GetTilesInfo(allGIDs, m.TileSets)
+	tilesInfo := tiled.GetSortedTilesInfo(allGIDs, m.TileSets)
 
 	if *debug {
 		for _, tileInfo := range tilesInfo {
