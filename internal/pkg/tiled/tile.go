@@ -1,5 +1,9 @@
 package tiled
 
+import (
+	"sort"
+)
+
 // TileInfo represents the information about a tile, including its source image and position in the tileset,
 // as well as any custom properties defined in the Tiled map
 // TODO: Implement sort
@@ -40,7 +44,7 @@ func GetTilesInfo(allGIDs []int, tilesSet []TileSet) []TileInfo {
 		if gid == 0 {
 			continue
 		}
-		
+
 		ts := findTileSet(gid, tilesSet)
 
 		if ts != nil {
@@ -58,6 +62,10 @@ func GetTilesInfo(allGIDs []int, tilesSet []TileSet) []TileInfo {
 
 		}
 	}
+
+	sort.Slice(tilesInfo, func(i, j int) bool {
+		return tilesInfo[i].GID < tilesInfo[j].GID
+	})
 
 	return tilesInfo
 }
