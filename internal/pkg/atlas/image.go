@@ -7,25 +7,19 @@ import (
 	"image/draw"
 	"image/png"
 	"os"
-	"sort"
+	//"sort"
 )
 
 // tilHeader represents the header of a TIL file.
 type tilHeader struct {
-	Width     uint8
-	Height    uint8
-	TileCount uint8
+	Width      uint8
+	Height     uint8
+	TilesCount uint8
 }
 
 // Create generates the master image by drawing each tile onto it.
 func (m *Master) createIMG() error {
-	m.Image.Palette = m.Palette
-
-	// Ensure that all tiles are sorted by GID to maintain a consistent order in the master image
-	sort.Slice(m.Tiles, func(i, j int) bool {
-		return m.Tiles[i].GID < m.Tiles[j].GID
-	})
-
+	//m.Image.Palette = m.Palette
 	imageCache := make(map[string]image.Image)
 
 	for i, tile := range m.Tiles {
@@ -54,8 +48,8 @@ func (m *Master) createIMG() error {
 	}
 
 	// Create the raw image
-	for y := range m.Dimension.Width * m.TileCount {
-		for x := range m.Dimension.Height {
+	for y := range m.Dimension.Height * m.TileCount {
+		for x := range m.Dimension.Width {
 			m.RawImage = append(m.RawImage, m.Image.ColorIndexAt(x, y))
 		}
 	}
@@ -89,19 +83,17 @@ func (m *Master) saveTIL(filePrefix string) error {
 	defer tilFile.Close()
 
 	h := tilHeader{
-		Width:     uint8(m.Dimension.Width),
-		Height:    uint8(m.Dimension.Height),
-		TileCount: uint8(m.TileCount),
+		Width:      uint8(m.Dimension.Width),
+		Height:     uint8(m.Dimension.Height),
+		TilesCount: uint8(m.TileCount),
 	}
 
 	if err := writeTILHeader(tilFile, h); err != nil {
-		return fmt.Errorf("failed to write header to %s: %v", filename, err)
+		return err
 	}
 
-	for pix := range m.RawImage {
-		if err := binary.Write(tilFile, binary.LittleEndian, m.RawImage[pix]); err != nil {
-			return fmt.Errorf("failed to write pixel to %s: %v", filename, err)
-		}
+	if _, err = tilFile.Write(m.RawImage); err != nil {
+		return fmt.Errorf("failed to write data to file %s: %v", filename, err)
 	}
 
 	return nil
@@ -110,7 +102,7 @@ func (m *Master) saveTIL(filePrefix string) error {
 // writeHeader writes the header to the raw file.
 func writeTILHeader(file *os.File, header tilHeader) error {
 	if err := binary.Write(file, binary.LittleEndian, header); err != nil {
-		return fmt.Errorf("failed to write header: %v", err)
+		return fmt.Errorf("failed to write header to file %s: %v", file.Name(), err)
 	}
 	return nil
 }

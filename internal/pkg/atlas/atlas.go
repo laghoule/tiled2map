@@ -6,6 +6,7 @@ import (
 	"image/color"
 	_ "image/png"
 	"os"
+	"sort"
 
 	"github.com/laghoule/tiled2map/internal/pkg/tiled"
 )
@@ -37,12 +38,21 @@ func NewMaster(tiles []tiled.TileInfo) (*Master, error) {
 	tilesCount := len(tiles)
 	masterRect := image.Rect(0, 0, width, height*tilesCount)
 	masterImg := image.NewPaletted(masterRect, nil)
+	
+	sort.Slice(tiles, func(i, j int) bool {
+		return tiles[i].GID < tiles[j].GID
+	})
 
 	// Get the palette from the first png image
 	firstTilePal, err := getPaletteFromPNG(tiles[0].SourceImage)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get palette: %v", err)
+		return nil, fmt.Errorf("failed to get palette for image %s: %v", tiles[0].SourceImage, err)
 	}
+	
+	// Remove the alpha channel from the palette (needed for transparency)
+	// bit shifting is needed because RGBA() is 16 bits, PNG is 8 bits
+	r, g, b, _ := firstTilePal.Palette[0].RGBA()
+	firstTilePal.Palette[0] = color.RGBA{uint8(r>>8), uint8(g>>8), uint8(b>>8), 0}
 
 	// Set the palette of the master image to match the first tile's palette
 	masterImg.Palette = firstTilePal.Palette
