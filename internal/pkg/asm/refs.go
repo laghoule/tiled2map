@@ -1,19 +1,49 @@
 package asm
 
 import (
-	"slices"
+	"fmt"
+	"os"
+
+	"github.com/laghoule/tiled2map/internal/pkg/tiled"
 )
 
-type ID map[int]int
+const (
+	tileAttribute = "attr"
+)
 
-// NewMap creates a new ID map from a slice of GIDs. It sorts the GIDs and maps each GID to its index in the sorted slice.
-func NewMap(gids []int) *ID {
-	slices.Sort(gids)
-	id := make(ID, len(gids))
-
-	for i, gid := range gids {
-		id[gid] = i
+// CreateAndSave generates the ASM tile references file
+func CreateAndSave(filePrefix string, tilesInfo []tiled.TileInfo) error {
+	if err := createTilesRefs(filePrefix, tilesInfo); err != nil {
+		return err
 	}
 
-	return &id
+	return nil
+}
+
+// createTilesRefs generates the ASM tile references file
+func createTilesRefs(filePrefix string, tilesInfo []tiled.TileInfo) error {
+	filename := fmt.Sprintf("%s.inc", filePrefix)
+	asmFile, err := os.Create(filename)
+	if err != nil {
+		return err
+	}
+	defer asmFile.Close()
+
+	fmt.Fprintf(asmFile, "TILES_PROPS LABEL BYTE\n")
+	for _, tileInfo := range tilesInfo {
+		for _, tile := range tileInfo.Tiles {
+			attr := 0.0
+			for _, prop := range tile.Properties {
+				if prop.Name == tileAttribute {
+					attr = prop.Value.(float64)
+					break
+				}
+			}
+			if attr != 0 {
+				fmt.Fprintf(asmFile, " DB %08bb ; GID: %d Source: %s\n", int(attr), tileInfo.GID, tileInfo.SourceImage)
+			}
+		}
+	}
+
+	return nil
 }

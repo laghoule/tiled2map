@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/laghoule/tiled2map/internal/pkg/asm"
 	"github.com/laghoule/tiled2map/internal/pkg/atlas"
 	"github.com/laghoule/tiled2map/internal/pkg/tiled"
 )
@@ -17,6 +18,7 @@ var (
 func main() {
 	fmt.Printf("tile2map version: %s, git commit: %s\n", version, gitCommit)
 	mapFile := flag.String("map", "", "Path to the Tiled map file (JSON format)")
+	assetsName := flag.String("name", "master", "Name of the assets to output")
 	debug := flag.Bool("debug", false, "Enable debug mode to print additional information")
 	flag.Parse()
 
@@ -40,12 +42,17 @@ func main() {
 	if err != nil {
 		exitWithError(err)
 	}
-	
-	err = master.CreateAndSave("master_tile")
+
+	err = master.CreateAndSave(*assetsName)
 	if err != nil {
 		exitWithError(err)
 	}
-	
+
+	err = asm.CreateAndSave(*assetsName, tilesInfo)
+	if err != nil {
+		exitWithError(err)
+	}
+
 }
 
 // exitWithError prints the error message to standard error and exits the program with a non-zero status code
