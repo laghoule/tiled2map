@@ -11,15 +11,6 @@ const (
 	tileAttribute = "attr"
 )
 
-// CreateAndSave generates the ASM tile references file
-func CreateAndSave(filePrefix string, tilesInfo []tiled.TileInfo) error {
-	if err := createTilesRefs(filePrefix, tilesInfo); err != nil {
-		return err
-	}
-
-	return nil
-}
-
 // createTilesRefs generates the ASM tile references file
 func createTilesRefs(filePrefix string, tilesInfo []tiled.TileInfo) error {
 	filename := fmt.Sprintf("%s.inc", filePrefix)
@@ -35,7 +26,11 @@ func createTilesRefs(filePrefix string, tilesInfo []tiled.TileInfo) error {
 			attr := 0.0
 			for _, prop := range tile.Properties {
 				if prop.Name == tileAttribute {
-					attr = prop.Value.(float64)
+					ok := false
+					attr, ok = prop.Value.(float64)
+					if !ok {
+						return fmt.Errorf("Invalid attribute value for tile %d: %v\n", tileInfo.GID, prop.Value)
+					}
 					break
 				}
 			}
