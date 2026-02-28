@@ -20,7 +20,9 @@ func createTilesRefs(filePrefix string, tilesInfo []tiled.TileInfo) error {
 	}
 	defer asmFile.Close()
 
+	index := 0
 	fmt.Fprintf(asmFile, "TILES_PROPS LABEL BYTE\n")
+
 	for _, tileInfo := range tilesInfo {
 		for _, tile := range tileInfo.Tiles {
 			attr := 0.0
@@ -35,7 +37,8 @@ func createTilesRefs(filePrefix string, tilesInfo []tiled.TileInfo) error {
 				}
 			}
 			if attr != 0 {
-				fmt.Fprintf(asmFile, " DB %08bb ; GID: %d Source: %s\n", int(attr), tileInfo.GID, tileInfo.SourceImage)
+				fmt.Fprintf(asmFile, " DB %08bb ; Index: %d (GID: %d Source: %s)\n", int(attr), index, tileInfo.GID, tileInfo.SourceImage)
+				index++
 			}
 		}
 	}
