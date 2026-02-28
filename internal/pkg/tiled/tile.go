@@ -15,7 +15,7 @@ type TileInfo struct {
 }
 
 // GIDToLocalID represents a mapping between global tile IDs and local tile IDs within a tileset
-type GIDToLocalID map[int]int
+type GIDToLocalID map[int]uint8
 
 // Dimension represents the width and height of a tile
 type Dimension struct {
@@ -79,7 +79,7 @@ func GetGIDToLocalID(allGIDs []int, tilesSet []TileSet) GIDToLocalID {
 
 		if ts != nil {
 			localID := gid - ts.FirstGID
-			g2l[gid] = localID
+			g2l[gid] = uint8(localID)
 		}
 	}
 

@@ -57,8 +57,7 @@ func main() {
 	err = asm.CreateMap(m, gidLocalID)
 	if err != nil {
 		exitWithError(err)
-	}
-
+	}	
 }
 
 // exitWithError prints the error message to standard error and exits the program with a non-zero status code
