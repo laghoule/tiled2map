@@ -6,15 +6,16 @@ import (
 
 // TileInfo represents the information about a tile, including its source image and position in the tileset,
 // as well as any custom properties defined in the Tiled map
-// TODO: Implement sort
 type TileInfo struct {
 	SourceImage string
-	GID         int
-	LocalID     int
 	Dimension   Dimension
+	GID         int
 	X, Y        int
 	Tiles       []Tile
 }
+
+// GIDToLocalID represents a mapping between global tile IDs and local tile IDs within a tileset
+type GIDToLocalID map[int]int
 
 // Dimension represents the width and height of a tile
 type Dimension struct {
@@ -53,7 +54,6 @@ func GetSortedTilesInfo(allGIDs []int, tilesSet []TileSet) []TileInfo {
 			tilesInfo = append(tilesInfo, TileInfo{
 				SourceImage: ts.Image,
 				GID:         gid,
-				LocalID:     localID,
 				Dimension:   Dimension{Width: ts.TileWidth, Height: ts.TileHeight},
 				X:           localID % ts.Columns * ts.TileWidth,
 				Y:           localID / ts.Columns * ts.TileHeight,
@@ -68,4 +68,20 @@ func GetSortedTilesInfo(allGIDs []int, tilesSet []TileSet) []TileInfo {
 	})
 
 	return tilesInfo
+}
+
+// GetGIDToLocalID returns a map of global IDs to local IDs for the given GIDs and tilesets
+func GetGIDToLocalID(allGIDs []int, tilesSet []TileSet) GIDToLocalID {
+	g2l := make(GIDToLocalID)
+
+	for _, gid := range allGIDs {
+		ts := findTileSet(gid, tilesSet)
+
+		if ts != nil {
+			localID := gid - ts.FirstGID
+			g2l[gid] = localID
+		}
+	}
+
+	return g2l
 }

@@ -29,11 +29,12 @@ func main() {
 
 	allGIDs := tiled.GetUniqueGID(m.Layers)
 	tilesInfo := tiled.GetSortedTilesInfo(allGIDs, m.TileSets)
+	gidLocalID := tiled.GetGIDToLocalID(allGIDs, m.TileSets)
 
 	if *debug {
 		for _, tileInfo := range tilesInfo {
 			fmt.Printf("Tile GID: %d\n Source Image: %s, Local ID: %d, X: %d, Y: %d\n Tiles: %v\n",
-				tileInfo.GID, tileInfo.SourceImage, tileInfo.LocalID, tileInfo.X, tileInfo.Y, tileInfo.Tiles)
+				tileInfo.GID, tileInfo.SourceImage, gidLocalID[tileInfo.GID], tileInfo.X, tileInfo.Y, tileInfo.Tiles)
 			fmt.Println()
 		}
 	}
@@ -49,6 +50,11 @@ func main() {
 	}
 
 	err = asm.CreateAndSave(*assetsName, tilesInfo)
+	if err != nil {
+		exitWithError(err)
+	}
+
+	err = asm.CreateMap(m, gidLocalID)
 	if err != nil {
 		exitWithError(err)
 	}

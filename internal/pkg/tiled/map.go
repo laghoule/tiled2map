@@ -8,9 +8,9 @@ import (
 )
 
 const (
-	backgroundLayerName = "bg"
-	foregroundLayerName = "fg"
-	boundLayerName      = "bound"
+	BackgroundLayerName = "bg"
+	ForegroundLayerName = "fg"
+	BoundLayerName      = "bound"
 )
 
 // REF: https://doc.mapeditor.org/en/stable/reference/json-map-format/#
@@ -123,18 +123,29 @@ func GetUniqueGID(layers []Layer) []int {
 // validate checks if the map contains the required layers (background and foreground) and that their names are valid
 func (m *Map) validate() error {
 	if len(m.Layers) == 0 {
-		return fmt.Errorf("map must contain 2 or 3 layer: %s, %s, %s (optional)", backgroundLayerName, foregroundLayerName, boundLayerName)
+		return fmt.Errorf("map must contain 2 or 3 layer: %s, %s, %s (optional)", BackgroundLayerName, ForegroundLayerName, BoundLayerName)
 	}
 
 	for _, layer := range m.Layers {
 		name := strings.ToLower(layer.Name)
-		if name == boundLayerName {
+		if name == BoundLayerName {
 			continue
 		}
-		if name != backgroundLayerName && name != foregroundLayerName {
-			return fmt.Errorf("invalid layer name: %s, expected '%s' or '%s'", layer.Name, backgroundLayerName, foregroundLayerName)
+		if name != BackgroundLayerName && name != ForegroundLayerName {
+			return fmt.Errorf("invalid layer name: %s, expected '%s' or '%s'", layer.Name, BackgroundLayerName, ForegroundLayerName)
 		}
 	}
 
 	return nil
+}
+
+// GetLayer retrieves a layer by its name
+func (m *Map) GetLayer(name string) (*Layer, error) {
+	for _, layer := range m.Layers {
+		if strings.ToLower(layer.Name) == name {
+			return &layer, nil
+		}
+	}
+
+	return nil, fmt.Errorf("layer not found: %s", name)
 }

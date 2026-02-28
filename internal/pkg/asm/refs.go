@@ -12,6 +12,7 @@ const (
 )
 
 // createTilesRefs generates the ASM tile references file
+// TODO: separa create tilesRefs & file creation
 func createTilesRefs(filePrefix string, tilesInfo []tiled.TileInfo) error {
 	filename := fmt.Sprintf("%s.inc", filePrefix)
 	asmFile, err := os.Create(filename)
@@ -32,7 +33,7 @@ func createTilesRefs(filePrefix string, tilesInfo []tiled.TileInfo) error {
 					ok := false
 					attr, ok = prop.Value.(float64)
 					if !ok {
-						return fmt.Errorf("Invalid attribute value for tile %d: %v\n", tileInfo.GID, prop.Value)
+						return fmt.Errorf("invalid attribute value for tile %d: %v\n", tileInfo.GID, prop.Value)
 					}
 					break
 				}
