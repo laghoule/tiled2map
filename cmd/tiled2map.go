@@ -49,7 +49,7 @@ func main() {
 		exitWithError(err)
 	}
 
-	err = asm.CreateAndSave(*assetsName, tilesInfo)
+	err = asm.CreateAndSave(m, *assetsName, tilesInfo)
 	if err != nil {
 		exitWithError(err)
 	}

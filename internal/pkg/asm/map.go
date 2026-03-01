@@ -12,11 +12,7 @@ const (
 	mapExt = ".map"
 )
 
-// dimension represents the dimensions of a map.
-type dimension struct {
-	width  uint8
-	height uint8
-}
+
 
 func CreateMap(m *tiled.Map, gidToLocalID tiled.GIDToLocalID) error {
 	bg, err := m.GetLayer(tiled.BackgroundLayerName)

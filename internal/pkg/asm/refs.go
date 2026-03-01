@@ -14,7 +14,7 @@ const (
 // createTilesRefs generates the ASM tile references file
 // TODO: separa create tilesRefs & file creation
 func createTilesRefs(filePrefix string, tilesInfo []tiled.TileInfo) error {
-	filename := fmt.Sprintf("%s.inc", filePrefix)
+	filename := fmt.Sprintf("%s-refs.inc", filePrefix)
 	asmFile, err := os.Create(filename)
 	if err != nil {
 		return err
@@ -25,6 +25,8 @@ func createTilesRefs(filePrefix string, tilesInfo []tiled.TileInfo) error {
 	fmt.Fprintf(asmFile, "; DO NOT EDIT\n\n")
 	fmt.Fprintf(asmFile, "TILES_PROPS LABEL BYTE\n")
 
+	// TODO: Use GO Template
+	
 	for idx, tileInfo := range tilesInfo {
 		attr := 0.0
 		for _, tile := range tileInfo.Tiles {
