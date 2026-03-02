@@ -13,7 +13,7 @@ const (
 	mapHeaderSize = uint8(2) // width + height
 )
 
-func CreateMap(m *tiled.Map, gidToLocalID tiled.GIDToLocalID) error {
+func createMap(m *tiled.Map, gidToLocalID tiled.GIDToLocalID) error {
 	bg, err := m.GetLayer(tiled.BackgroundLayerName)
 	if err != nil {
 		return fmt.Errorf("failed to get background layer: %w", err)
@@ -24,39 +24,39 @@ func CreateMap(m *tiled.Map, gidToLocalID tiled.GIDToLocalID) error {
 		return fmt.Errorf("failed to get foreground layer: %w", err)
 	}
 
-	d := dimension{
-		width:  uint8(m.Width),
-		height: uint8(m.Height),
-	}
+	// Map dimension
+	dim := dimension{width: m.Width, height: m.Height}
 
-	bgMap := createMap(d, bg, gidToLocalID)
-	fgMap := createMap(d, fg, gidToLocalID)
+	bgMap := convertToMap(dim, bg, gidToLocalID)
+	fgMap := convertToMap(dim, fg, gidToLocalID)
 
-	if err = writeMap("bg-world", d, bgMap); err != nil {
+	if err = writeMap("bg-world", dim, bgMap); err != nil {
 		return fmt.Errorf("failed to write bg map: %w", err)
 	}
 
-	if err = writeMap("fg-world", d, fgMap); err != nil {
+	if err = writeMap("fg-world", dim, fgMap); err != nil {
 		return fmt.Errorf("failed to write fg map: %w", err)
 	}
 
 	return nil
 }
 
-// createMap converts a GID Tiled layer to a flat localID uint8 map.
-func createMap(d dimension, l *tiled.Layer, gidToLocalID tiled.GIDToLocalID) []uint8 {
+// convertToMap converts a tiled layer to a flat localID uint8 map
+func convertToMap(d dimension, l *tiled.Layer, gidToLocalID tiled.GIDToLocalID) []uint8 {
 	m := make([]uint8, 0, l.Width*l.Height)
-	for y := 0; y < l.Height; y += int(d.height) {
-		for x := 0; x < l.Width; x += int(d.width) {
+	for y := 0; y < l.Height; y += d.height {
+		for x := 0; x < l.Width; x += d.width {
 
-			for sceneY := y; sceneY < y+int(d.height); sceneY++ {
-				for sceneX := x; sceneX < x+int(d.width); sceneX++ {
+			// Iterate over the scene dimensions
+			for sceneY := y; sceneY < y+d.height; sceneY++ {
+				for sceneX := x; sceneX < x+d.width; sceneX++ {
 					// (y * width) + x
 					gid := l.Data[sceneX+sceneY*l.Width]
 					localID := gidToLocalID[gid]
 					m = append(m, localID)
 				}
 			}
+
 		}
 	}
 
