@@ -16,7 +16,7 @@ type ASMLinker struct {
 	Dimension    Dimension
 	TileMap      *tiled.Map
 	TilesInfo    []tiled.TileInfo
-	GIDToLocalID tiled.GIDToLocalID
+	GIDToLocalID tiled.GIDToLocalTIL
 }
 
 // Dimension represents the dimensions of a map.
@@ -26,7 +26,7 @@ type Dimension struct {
 }
 
 // NewASMLinker creates a new ASMLinker.
-func NewASMLinker(filePrefix string, tileMap *tiled.Map, tilesInfo []tiled.TileInfo, gidToLocalID tiled.GIDToLocalID) *ASMLinker {
+func NewASMLinker(filePrefix string, tileMap *tiled.Map, tilesInfo []tiled.TileInfo, gidToLocalID tiled.GIDToLocalTIL) *ASMLinker {
 	return &ASMLinker{
 		FilePrefix:   filePrefix,
 		Dimension:    getDimension(tileMap),

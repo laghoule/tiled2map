@@ -29,7 +29,7 @@ func main() {
 
 	allGIDs := tiled.GetUniqueGID(tileMap.Layers)
 	tilesInfo := tiled.GetSortedTilesInfo(allGIDs, tileMap.TileSets)
-	gidLocalID := tiled.GetGIDToLocalID(allGIDs, tileMap.TileSets)
+	gidLocalTIL := tiled.GetGIDToLocalTIL(allGIDs)
 
 	master, err := atlas.NewMaster(tilesInfo)
 	if err != nil {
@@ -49,7 +49,7 @@ func main() {
 	}
 
 	// Create and save the ASM file with the extracted scene dimension
-	asmLinker := asm.NewASMLinker(*filePrefix, tileMap, tilesInfo, gidLocalID)
+	asmLinker := asm.NewASMLinker(*filePrefix, tileMap, tilesInfo, gidLocalTIL)
 	err = asmLinker.CreateAndSave(dimension)
 	if err != nil {
 		exitWithError(err)

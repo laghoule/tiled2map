@@ -14,8 +14,8 @@ type TileInfo struct {
 	Tiles       []Tile
 }
 
-// GIDToLocalID represents a mapping between global tile IDs and local tile IDs within a tileset
-type GIDToLocalID map[int]uint8
+// GIDToLocalTIL represents a mapping between global tile IDs and local tile IDs within a tileset
+type GIDToLocalTIL map[int]uint8
 
 // Dimension represents the width and height of a tile
 type Dimension struct {
@@ -70,17 +70,13 @@ func GetSortedTilesInfo(allGIDs []int, tilesSet []TileSet) []TileInfo {
 	return tilesInfo
 }
 
-// GetGIDToLocalID returns a map of global IDs to local IDs for the given GIDs and tilesets
-func GetGIDToLocalID(allGIDs []int, tilesSet []TileSet) GIDToLocalID {
-	g2l := make(GIDToLocalID)
-
-	for _, gid := range allGIDs {
-		ts := findTileSet(gid, tilesSet)
-
-		if ts != nil {
-			localID := gid - ts.FirstGID
-			g2l[gid] = uint8(localID)
-		}
+// GetGIDToLocalTIL returns a map of global IDs to local IDs for the given GIDs
+func GetGIDToLocalTIL(allGIDs []int) GIDToLocalTIL {
+	g2l := make(GIDToLocalTIL)
+	sort.Ints(allGIDs)
+	
+	for i, gid := range allGIDs {
+		g2l[gid] = uint8(i)
 	}
 
 	return g2l
