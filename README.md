@@ -108,7 +108,7 @@ TILES_PROPS LABEL BYTE
 
 ### `-scene.inc` — Assembly Scene Descriptors
 
-Each scene entry uses a `SCENE` macro with references to background/foreground buffer offsets, music, and neighboring scenes (North, South, East, West). A value of `0` means no neighbor in that direction.
+Each scene entry uses a `SCENE` struct with references to background/foreground buffer offsets, music, and neighboring scenes (North, South, East, West). A value of `0` means no neighbor in that direction.
 
 ```asm
 SCENE_0_0 SCENE < \
