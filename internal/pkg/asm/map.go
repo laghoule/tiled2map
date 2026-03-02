@@ -13,28 +13,25 @@ const (
 	mapHeaderSize = uint8(2) // width + height
 )
 
-func createMap(m *tiled.Map, gidToLocalID tiled.GIDToLocalID) error {
-	bg, err := m.GetLayer(tiled.BackgroundLayerName)
+func (a *ASMLinker) createMap() error {
+	bg, err := a.TileMap.GetLayer(tiled.BackgroundLayerName)
 	if err != nil {
 		return fmt.Errorf("failed to get background layer: %w", err)
 	}
 
-	fg, err := m.GetLayer(tiled.ForegroundLayerName)
+	fg, err := a.TileMap.GetLayer(tiled.ForegroundLayerName)
 	if err != nil {
 		return fmt.Errorf("failed to get foreground layer: %w", err)
 	}
 
-	// Map dimension
-	dim := dimension{width: m.Width, height: m.Height}
+	bgMap := a.convertToMap(bg)
+	fgMap := a.convertToMap(fg)
 
-	bgMap := convertToMap(dim, bg, gidToLocalID)
-	fgMap := convertToMap(dim, fg, gidToLocalID)
-
-	if err = writeMap("bg-world", dim, bgMap); err != nil {
+	if err = a.writeMap("bg-world", bgMap); err != nil {
 		return fmt.Errorf("failed to write bg map: %w", err)
 	}
 
-	if err = writeMap("fg-world", dim, fgMap); err != nil {
+	if err = a.writeMap("fg-world", fgMap); err != nil {
 		return fmt.Errorf("failed to write fg map: %w", err)
 	}
 
@@ -42,17 +39,17 @@ func createMap(m *tiled.Map, gidToLocalID tiled.GIDToLocalID) error {
 }
 
 // convertToMap converts a tiled layer to a flat localID uint8 map
-func convertToMap(d dimension, l *tiled.Layer, gidToLocalID tiled.GIDToLocalID) []uint8 {
+func (a *ASMLinker) convertToMap(l *tiled.Layer) []uint8 {
 	m := make([]uint8, 0, l.Width*l.Height)
-	for y := 0; y < l.Height; y += d.height {
-		for x := 0; x < l.Width; x += d.width {
+	for y := 0; y < l.Height; y += a.Dimension.Height {
+		for x := 0; x < l.Width; x += a.Dimension.Width {
 
 			// Iterate over the scene dimensions
-			for sceneY := y; sceneY < y+d.height; sceneY++ {
-				for sceneX := x; sceneX < x+d.width; sceneX++ {
+			for sceneY := y; sceneY < y+a.Dimension.Height; sceneY++ {
+				for sceneX := x; sceneX < x+a.Dimension.Width; sceneX++ {
 					// (y * width) + x
 					gid := l.Data[sceneX+sceneY*l.Width]
-					localID := gidToLocalID[gid]
+					localID := a.GIDToLocalID[gid]
 					m = append(m, localID)
 				}
 			}
@@ -64,16 +61,18 @@ func convertToMap(d dimension, l *tiled.Layer, gidToLocalID tiled.GIDToLocalID) 
 }
 
 // writeMap writes a flat localID uint8 map to a file.
-func writeMap(filePrefix string, d dimension, m []uint8) error {
-	mapFile, err := os.Create(filePrefix + mapExt)
+func (a *ASMLinker) writeMap(layer string, m []uint8) error {
+	fileName := fmt.Sprintf("%s-%s%s", a.FilePrefix, layer, mapExt)
+
+	mapFile, err := os.Create(fileName)
 	if err != nil {
 		return fmt.Errorf("failed to create map file: %w", err)
 	}
 	defer mapFile.Close()
 
 	// Write map dimensions as header to map file
-	binary.Write(mapFile, binary.LittleEndian, d.width)
-	binary.Write(mapFile, binary.LittleEndian, d.height)
+	binary.Write(mapFile, binary.LittleEndian, a.Dimension.Width)
+	binary.Write(mapFile, binary.LittleEndian, a.Dimension.Height)
 
 	for data := range m {
 		err := binary.Write(mapFile, binary.LittleEndian, m[data])

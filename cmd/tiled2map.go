@@ -18,38 +18,39 @@ var (
 func main() {
 	fmt.Printf("tile2map version: %s, git commit: %s\n", version, gitCommit)
 	mapFile := flag.String("map", "", "Path to the Tiled map file (JSON format)")
-	assetsName := flag.String("name", "master", "Name of the assets to output")
-	debug := flag.Bool("debug", false, "Enable debug mode to print additional information")
+	sceneDimension := flag.String("dimension", "20x11", "Dimension of each scenes")
+	filePrefix := flag.String("fileprefix", "master", "Prefix for the generated files")
 	flag.Parse()
 
-	m, err := tiled.NewMap(*mapFile)
+	tileMap, err := tiled.NewMap(*mapFile)
 	if err != nil {
 		exitWithError(err)
 	}
 
-	allGIDs := tiled.GetUniqueGID(m.Layers)
-	tilesInfo := tiled.GetSortedTilesInfo(allGIDs, m.TileSets)
-	gidLocalID := tiled.GetGIDToLocalID(allGIDs, m.TileSets)
-
-	if *debug {
-		for _, tileInfo := range tilesInfo {
-			fmt.Printf("Tile GID: %d\n Source Image: %s, Local ID: %d, X: %d, Y: %d\n Tiles: %v\n",
-				tileInfo.GID, tileInfo.SourceImage, gidLocalID[tileInfo.GID], tileInfo.X, tileInfo.Y, tileInfo.Tiles)
-			fmt.Println()
-		}
-	}
+	allGIDs := tiled.GetUniqueGID(tileMap.Layers)
+	tilesInfo := tiled.GetSortedTilesInfo(allGIDs, tileMap.TileSets)
+	gidLocalID := tiled.GetGIDToLocalID(allGIDs, tileMap.TileSets)
 
 	master, err := atlas.NewMaster(tilesInfo)
 	if err != nil {
 		exitWithError(err)
 	}
 
-	err = master.CreateAndSave(*assetsName)
+	// Create and save the master atlas file
+	err = master.CreateAndSave(*filePrefix)
 	if err != nil {
 		exitWithError(err)
 	}
 
-	err = asm.CreateAndSave(m, *assetsName, tilesInfo, gidLocalID)
+	// Extract scene dimension from the command line argument
+	dimension, err := asm.ExtractDimension(*sceneDimension)
+	if err != nil {
+		exitWithError(err)
+	}
+
+	// Create and save the ASM file with the extracted scene dimension
+	asmLinker := asm.NewASMLinker(*filePrefix, tileMap, tilesInfo, gidLocalID)
+	err = asmLinker.CreateAndSave(dimension)
 	if err != nil {
 		exitWithError(err)
 	}

@@ -4,8 +4,6 @@ import (
 	"fmt"
 	"os"
 	"text/template"
-
-	"github.com/laghoule/tiled2map/internal/pkg/tiled"
 )
 
 // sceneTemplateData represents the data required to generate a scene template.
@@ -21,14 +19,14 @@ type SceneTemplateData struct {
 }
 
 // createScene generates a scene template based on the provided dimension.
-func createScene(m *tiled.Map, filePrefix string) error {
+func (a *ASMLinker) createScene() error {
 	tpl, err := template.ParseFiles("tmpl/scene.tmpl")
 	if err != nil {
 		return fmt.Errorf("failed to parse scene template: %w", err)
 	}
 
 	scene := []SceneTemplateData{}
-	sceneSize := (int(m.Width) / 20) * (int(m.Height) / 11)
+	sceneSize := (int(a.TileMap.Width) / 20) * (int(a.TileMap.Height) / 11)
 
 	// Scene neighbor helper
 	getNeighbord := func(sx, sy int, cond bool) string {
@@ -38,25 +36,25 @@ func createScene(m *tiled.Map, filePrefix string) error {
 		return "0"
 	}
 
-	for y := range int(m.Height) / 11 {
-		for x := range int(m.Width) / 20 {
+	for y := range int(a.TileMap.Height) / 11 {
+		for x := range int(a.TileMap.Width) / 20 {
 			// offset is the 2D -> 1D transformation
-			currentOffset := ((y * int(m.Width)) + x*sceneSize) + int(mapHeaderSize)
+			currentOffset := ((y * int(a.TileMap.Width)) + x*sceneSize) + int(mapHeaderSize)
 
 			scene = append(scene, SceneTemplateData{
 				Name:      fmt.Sprintf("SCENE_%d_%d", x, y),
 				BGOffset:  currentOffset,
 				FGOffset:  currentOffset,
 				NorthName: getNeighbord(x, y-1, y > 0),
-				SouthName: getNeighbord(x, y+1, y < int(m.Height)-1),
-				EastName:  getNeighbord(x+1, y, x < int(m.Width)-1),
+				SouthName: getNeighbord(x, y+1, y < int(a.TileMap.Height)-1),
+				EastName:  getNeighbord(x+1, y, x < int(a.TileMap.Width)-1),
 				WestName:  getNeighbord(x-1, y, x > 0),
 				MusicName: fmt.Sprintf("MUSIC_%d_%d", x, y),
 			})
 		}
 	}
 
-	filename := fmt.Sprintf("%s-scene.%s", filePrefix, includeExt)
+	filename := fmt.Sprintf("%s-scene.%s", a.FilePrefix, includeExt)
 	sceneFile, err := os.Create(filename)
 	if err != nil {
 		return fmt.Errorf("failed to create scene file: %w", err)

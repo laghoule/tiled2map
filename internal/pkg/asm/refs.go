@@ -3,8 +3,6 @@ package asm
 import (
 	"fmt"
 	"os"
-
-	"github.com/laghoule/tiled2map/internal/pkg/tiled"
 )
 
 const (
@@ -13,8 +11,8 @@ const (
 
 // createTilesRefs generates the ASM tile references file
 // TODO: separa create tilesRefs & file creation
-func createTilesRefs(filePrefix string, tilesInfo []tiled.TileInfo) error {
-	filename := fmt.Sprintf("%s-refs.inc", filePrefix)
+func (a *ASMLinker) createTilesRefs() error {
+	filename := fmt.Sprintf("%s-refs.inc", a.FilePrefix)
 	asmFile, err := os.Create(filename)
 	if err != nil {
 		return err
@@ -26,8 +24,8 @@ func createTilesRefs(filePrefix string, tilesInfo []tiled.TileInfo) error {
 	fmt.Fprintf(asmFile, "TILES_PROPS LABEL BYTE\n")
 
 	// TODO: Use GO Template
-	
-	for idx, tileInfo := range tilesInfo {
+
+	for idx, tileInfo := range a.TilesInfo {
 		attr := 0.0
 		for _, tile := range tileInfo.Tiles {
 			for _, prop := range tile.Properties {
