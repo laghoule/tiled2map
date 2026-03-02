@@ -9,10 +9,9 @@ import (
 )
 
 const (
-	mapExt = ".map"
+	mapExt        = ".map"
+	mapHeaderSize = uint8(2) // width + height
 )
-
-
 
 func CreateMap(m *tiled.Map, gidToLocalID tiled.GIDToLocalID) error {
 	bg, err := m.GetLayer(tiled.BackgroundLayerName)
@@ -52,6 +51,7 @@ func createMap(d dimension, l *tiled.Layer, gidToLocalID tiled.GIDToLocalID) []u
 
 			for sceneY := y; sceneY < y+int(d.height); sceneY++ {
 				for sceneX := x; sceneX < x+int(d.width); sceneX++ {
+					// (y * width) + x
 					gid := l.Data[sceneX+sceneY*l.Width]
 					localID := gidToLocalID[gid]
 					m = append(m, localID)
@@ -71,7 +71,7 @@ func writeMap(filePrefix string, d dimension, m []uint8) error {
 	}
 	defer mapFile.Close()
 
-	// Write map dimensions as header
+	// Write map dimensions as header to map file
 	binary.Write(mapFile, binary.LittleEndian, d.width)
 	binary.Write(mapFile, binary.LittleEndian, d.height)
 
