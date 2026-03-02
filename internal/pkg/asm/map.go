@@ -71,8 +71,8 @@ func (a *ASMLinker) writeMap(layer string, m []uint8) error {
 	defer mapFile.Close()
 
 	// Write map dimensions as header to map file
-	binary.Write(mapFile, binary.LittleEndian, a.Dimension.Width)
-	binary.Write(mapFile, binary.LittleEndian, a.Dimension.Height)
+	binary.Write(mapFile, binary.LittleEndian, uint8(a.Dimension.Width))
+	binary.Write(mapFile, binary.LittleEndian, uint8(a.Dimension.Height))
 
 	for data := range m {
 		err := binary.Write(mapFile, binary.LittleEndian, m[data])

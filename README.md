@@ -88,8 +88,8 @@ Tiles are stored sequentially, one after another, in GID order.
 
 | Offset | Size    | Description              |
 |--------|---------|--------------------------|
-| 0      | 4 bytes | Scene width (int32 LE)   |
-| 4      | 4 bytes | Scene height (int32 LE)  |
+| 0      | 1 byte  | Scene width              |
+| 1      | 1 byte  | Scene height             |
 | 8+     | N bytes | Local tile IDs (uint8)   |
 
 Map data is organized **scene by scene** (left-to-right, top-to-bottom), and within each scene tiles are stored row by row.
