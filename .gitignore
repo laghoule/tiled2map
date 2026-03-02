@@ -1,6 +1,6 @@
 tiled2map
-*.map
-*.inc
-*.png
-*.til
+/*.map
+/*.inc
+/*.png
+/*.til
 /map.json
