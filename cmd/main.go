@@ -16,11 +16,16 @@ var (
 )
 
 func main() {
-	fmt.Printf("tile2map version: %s, git commit: %s\n", version, gitCommit)
+	fmt.Printf("tiled2map version: %s, git commit: %s\n", version, gitCommit)
 	mapFile := flag.String("map", "", "Path to the Tiled map file (JSON format)")
 	sceneDimension := flag.String("dimension", "20x11", "Dimension of each scenes")
 	filePrefix := flag.String("fileprefix", "master", "Prefix for the generated files")
 	flag.Parse()
+
+	if *mapFile == "" {
+		flag.Usage()
+		exitWithError(fmt.Errorf("map file not specified"))
+	}
 
 	tileMap, err := tiled.NewMap(*mapFile)
 	if err != nil {

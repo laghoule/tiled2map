@@ -9,8 +9,7 @@ import (
 // sceneTemplateData represents the data required to generate a scene template.
 type SceneTemplateData struct {
 	Name      string
-	BGOffset  int
-	FGOffset  int
+	MapOffset int
 	NorthName string
 	SouthName string
 	EastName  string
@@ -19,36 +18,37 @@ type SceneTemplateData struct {
 }
 
 // createScene generates a scene template based on the provided dimension.
-func (a *ASMLinker) createScene() error {
+func (a *ASMLinker) createScene(sceneDimension Dimension) error {
 	tpl, err := template.ParseFiles("tmpl/scene.tmpl")
 	if err != nil {
 		return fmt.Errorf("failed to parse scene template: %w", err)
 	}
 
 	scene := []SceneTemplateData{}
-	sceneSize := (int(a.TileMap.Width) / 20) * (int(a.TileMap.Height) / 11)
+	sceneTiles := sceneDimension.Width * sceneDimension.Height
+	numScenesX := int(a.TileMap.Width) / sceneDimension.Width
+	numScenesY := int(a.TileMap.Height) / sceneDimension.Height
 
 	// Scene neighbor helper
-	getNeighbord := func(sx, sy int, cond bool) string {
+	getNeighbor := func(sx, sy int, cond bool) string {
 		if cond {
 			return fmt.Sprintf("OFFSET SCENE_%d_%d", sx, sy)
 		}
 		return "0"
 	}
 
-	for y := range int(a.TileMap.Height) / 11 {
-		for x := range int(a.TileMap.Width) / 20 {
+	for y := range int(a.TileMap.Height) / sceneDimension.Height {
+		for x := range int(a.TileMap.Width) / sceneDimension.Width {
 			// offset is the 2D -> 1D transformation
-			currentOffset := ((y * int(a.TileMap.Width)) + x*sceneSize) + int(mapHeaderSize)
+			currentOffset := ((y*numScenesX)+x)*sceneTiles + int(mapHeaderSize)
 
 			scene = append(scene, SceneTemplateData{
 				Name:      fmt.Sprintf("SCENE_%d_%d", x, y),
-				BGOffset:  currentOffset,
-				FGOffset:  currentOffset,
-				NorthName: getNeighbord(x, y-1, y > 0),
-				SouthName: getNeighbord(x, y+1, y < int(a.TileMap.Height)-1),
-				EastName:  getNeighbord(x+1, y, x < int(a.TileMap.Width)-1),
-				WestName:  getNeighbord(x-1, y, x > 0),
+				MapOffset: currentOffset,
+				NorthName: getNeighbor(x, y-1, y > 0),
+				SouthName: getNeighbor(x, y+1, y < numScenesY-1),
+				EastName:  getNeighbor(x+1, y, x < numScenesX-1),
+				WestName:  getNeighbor(x-1, y, x > 0),
 				MusicName: fmt.Sprintf("MUSIC_%d_%d", x, y),
 			})
 		}

@@ -25,16 +25,13 @@ type Dimension struct {
 
 // findTileSet finds the appropriate tileset for a given GID
 func findTileSet(gid int, tileSet []TileSet) *TileSet {
-	best := &TileSet{}
-
 	for _, ts := range tileSet {
 		if gid >= ts.FirstGID && gid <= (ts.FirstGID+ts.TileCount) {
-			best = &ts
-			break
+			return &ts
 		}
 	}
 
-	return best
+	return nil
 }
 
 // GetSortedTilesInfo returns a sorted slice of TileInfo objects for the given GIDs and tilesets

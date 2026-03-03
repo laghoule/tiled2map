@@ -20,7 +20,11 @@ func getPaletteFromPNG(imgPath string) (*image.Paletted, error) {
 		return nil, fmt.Errorf("failed to decode image file: %v", err)
 	}
 
-	return img.(*image.Paletted), nil
+	if img, ok := img.(*image.Paletted); ok {
+		return img, nil
+	}
+
+	return nil, fmt.Errorf("image %s is not a paletted image", imgPath)
 }
 
 // arePaletteEqual compares two palettes and returns true if they are equal, false otherwise
@@ -34,7 +38,6 @@ func arePaletteEqual(p1, p2 color.Palette) bool {
 		r2, g2, b2, _ := p2[i].RGBA()
 
 		if r1 != r2 || g1 != g2 || b1 != b2 {
-			fmt.Printf("Color mismatch at index %d: %v != %v\n", i, p1[i], p2[i])
 			return false
 		}
 	}

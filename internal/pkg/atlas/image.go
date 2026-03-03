@@ -7,7 +7,6 @@ import (
 	"image/draw"
 	"image/png"
 	"os"
-	//"sort"
 )
 
 // tilHeader represents the header of a TIL file.
@@ -19,7 +18,6 @@ type tilHeader struct {
 
 // Create generates the master image by drawing each tile onto it.
 func (m *Master) createIMG() error {
-	//m.Image.Palette = m.Palette
 	imageCache := make(map[string]image.Image)
 
 	for i, tile := range m.Tiles {
@@ -41,7 +39,7 @@ func (m *Master) createIMG() error {
 		tileRect := image.Rect(tile.X, tile.Y, tile.X+m.Dimension.Width, tile.Y+m.Dimension.Height)
 
 		// calculate the destination rectangle for the tile in the master image
-		destRect := image.Rect(0, i*m.Dimension.Height, m.Dimension.Width, (i+tileSpacing)*m.Dimension.Height)
+		destRect := image.Rect(0, i*m.Dimension.Height, m.Dimension.Width, (i+1)*m.Dimension.Height)
 
 		// draw the tile onto the master image
 		draw.Draw(m.Image, destRect, src, tileRect.Min, draw.Src)

@@ -13,7 +13,6 @@ const (
 // TileRefsTemplateData is the data structure for the tiles references template
 type TileRefsTemplateData struct {
 	GID         int
-	LocalID     int
 	SourceImage string
 	Attribute   string
 }
@@ -28,19 +27,17 @@ func (a *ASMLinker) createTilesRefs() error {
 	defer asmFile.Close()
 
 	tilesRefs := []TileRefsTemplateData{}
-	attribute := ""
 
 	for _, tileInfo := range a.TilesInfo {
-		attr := 0.0
+		attribute := ""
 		for _, tile := range tileInfo.Tiles {
 			for _, prop := range tile.Properties {
 				if prop.Name == tileAttribute {
-					ok := false
-					attr, ok = prop.Value.(float64)
+					val, ok := prop.Value.(float64)
 					if !ok {
-						return fmt.Errorf("invalid attribute value for tile %d: %v\n", tileInfo.GID, prop.Value)
+						return fmt.Errorf("invalid attribute value for tile %d: %v", tileInfo.GID, prop.Value)
 					}
-					attribute = fmt.Sprintf("%08bb", int(attr))
+					attribute = fmt.Sprintf("%08bb", int(val))
 					break
 				}
 			}

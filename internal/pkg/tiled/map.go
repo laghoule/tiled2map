@@ -80,7 +80,7 @@ func NewMap(mapFile string) (*Map, error) {
 	return m, nil
 }
 
-// getProperties retrieves the properties of a tile based on its localID by finding the corresponding tileset and tile information
+// getTileProperties retrieves the properties of a tile based on its localID by finding the corresponding tileset and tile information
 func getTileProperties(localID int, tileset *TileSet) []Tile {
 	tiles := []Tile{}
 
@@ -100,7 +100,7 @@ func getTileProperties(localID int, tileset *TileSet) []Tile {
 	return tiles
 }
 
-// GettUniqueGID retrieves all unique GIDs used in the map layers, excluding GID 0 which represents empty tiles
+// GetUniqueGID retrieves all unique GIDs used in the map layers, excluding GID 0 which represents empty tiles
 func GetUniqueGID(layers []Layer) []int {
 	uniqueGID := make(map[int]bool)
 
@@ -113,7 +113,7 @@ func GetUniqueGID(layers []Layer) []int {
 	}
 
 	gids := []int{}
-	for gid, _ := range uniqueGID {
+	for gid := range uniqueGID {
 		gids = append(gids, gid)
 	}
 
@@ -125,25 +125,42 @@ func (m *Map) validate() error {
 	if len(m.Layers) == 0 {
 		return fmt.Errorf("map must contain 2 or 3 layer: %s, %s, %s (optional)", BackgroundLayerName, ForegroundLayerName, BoundLayerName)
 	}
+	
+	if m.Width == 0 || m.Height == 0 {
+		return fmt.Errorf("map must have a width and height greater than 0")
+	}
+
+	var bgFound, fgFound bool
 
 	for _, layer := range m.Layers {
 		name := strings.ToLower(layer.Name)
 		if name == BoundLayerName {
 			continue
 		}
-		if name != BackgroundLayerName && name != ForegroundLayerName {
-			return fmt.Errorf("invalid layer name: %s, expected '%s' or '%s'", layer.Name, BackgroundLayerName, ForegroundLayerName)
+
+		if name == BackgroundLayerName {
+			bgFound = true
+			continue
+		}
+
+		if name == ForegroundLayerName {
+			fgFound = true
+			continue
 		}
 	}
 
-	return nil
+	if bgFound && fgFound {
+		return nil
+	}
+
+	return fmt.Errorf("invalid layer name: %s or %s not found", BackgroundLayerName, ForegroundLayerName)
 }
 
 // GetLayer retrieves a layer by its name
 func (m *Map) GetLayer(name string) (*Layer, error) {
-	for _, layer := range m.Layers {
+	for i, layer := range m.Layers {
 		if strings.ToLower(layer.Name) == name {
-			return &layer, nil
+			return &m.Layers[i], nil
 		}
 	}
 

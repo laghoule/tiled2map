@@ -10,10 +10,6 @@ import (
 	"github.com/laghoule/tiled2map/internal/pkg/tiled"
 )
 
-const (
-	tileSpacing = 1
-)
-
 // Master represents the master image that contains all the tiles from the Tiled map. It includes the image itself and the raw byte data of the image.
 type Master struct {
 	Tiles     []tiled.TileInfo
@@ -32,6 +28,10 @@ type Dimension struct {
 
 // NewMaster creates a new Master instance with the given tiles.
 func NewMaster(tiles []tiled.TileInfo) (*Master, error) {
+	if len(tiles) == 0 {
+		return nil, fmt.Errorf("tiles cannot be nil or empty")
+	}
+	
 	width, height := getTileDimension(tiles[0])
 
 	tilesCount := len(tiles)

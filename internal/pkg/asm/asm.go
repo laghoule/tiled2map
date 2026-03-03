@@ -13,7 +13,6 @@ const (
 // ASMLinker links the map to scene and language generated references
 type ASMLinker struct {
 	FilePrefix   string
-	Dimension    Dimension
 	TileMap      *tiled.Map
 	TilesInfo    []tiled.TileInfo
 	GIDToLocalID tiled.GIDToLocalTIL
@@ -29,7 +28,6 @@ type Dimension struct {
 func NewASMLinker(filePrefix string, tileMap *tiled.Map, tilesInfo []tiled.TileInfo, gidToLocalID tiled.GIDToLocalTIL) *ASMLinker {
 	return &ASMLinker{
 		FilePrefix:   filePrefix,
-		Dimension:    getDimension(tileMap),
 		TileMap:      tileMap,
 		TilesInfo:    tilesInfo,
 		GIDToLocalID: gidToLocalID,
@@ -42,23 +40,15 @@ func (a *ASMLinker) CreateAndSave(sceneDimension Dimension) error {
 		return err
 	}
 
-	if err := a.createScene(); err != nil {
+	if err := a.createScene(sceneDimension); err != nil {
 		return err
 	}
 
-	if err := a.createMap(); err != nil {
+	if err := a.createMap(sceneDimension); err != nil {
 		return err
 	}
 
 	return nil
-}
-
-// getDimension returns the dimension of the map.
-func getDimension(m *tiled.Map) Dimension {
-	return Dimension{
-		Width:  m.Width,
-		Height: m.Height,
-	}
 }
 
 // ExtractDimension extracts the dimension from a string.
