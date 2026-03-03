@@ -3,6 +3,8 @@ package asm
 import (
 	"fmt"
 	"os"
+	"regexp"
+	"strings"
 	"text/template"
 )
 
@@ -33,16 +35,25 @@ func (a *ASMLinker) createTilesRefs() error {
 		for _, tile := range tileInfo.Tiles {
 			for _, prop := range tile.Properties {
 				if prop.Name == tileAttribute {
-					val, ok := prop.Value.(float64)
-					if !ok {
+					switch val := prop.Value.(type) {
+					case float64:
+						attribute = fmt.Sprintf("%08bb", int(val))
+					case string:
+						validASMLabel := regexp.MustCompile(`^[A-Za-z_][A-Za-z0-9_]*$`)
+						upper := strings.ToUpper(val)
+						if !validASMLabel.MatchString(upper) {
+							return fmt.Errorf("invalid attribute label for tile %d: %q (must match ^[A-Za-z_][A-Za-z0-9_]*$)", tileInfo.GID, val)
+						}
+						attribute = upper
+					default:
 						return fmt.Errorf("invalid attribute value for tile %d: %v", tileInfo.GID, prop.Value)
 					}
-					attribute = fmt.Sprintf("%08bb", int(val))
 					break
 				}
 			}
 		}
 
+		// If no attribute is set, default to 00000000b
 		if attribute == "" {
 			attribute = "00000000b"
 		}
