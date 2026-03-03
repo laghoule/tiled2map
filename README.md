@@ -6,8 +6,8 @@
 
 The tool takes a Tiled map exported as JSON and produces:
 
-- **`<prefix>.png`** — A master tile atlas image containing all unique tiles used in the map, packed vertically.
-- **`<prefix>.til`** — A binary tile atlas file (raw indexed pixel data) with a small header, suitable for direct loading on target hardware.
+- **`<prefix>-tileset.png`** — A master tile atlas image containing all unique tiles used in the map, packed vertically.
+- **`<prefix>.tileset.til`** — A binary tile atlas file (raw indexed pixel data) with a small header, suitable for direct loading on target hardware.
 - **`<prefix>-bg-world.map`** — Binary background layer map data, organized by scenes.
 - **`<prefix>-fg-world.map`** — Binary foreground layer map data, organized by scenes.
 - **`<prefix>-refs.inc`** — An assembly include file listing per-tile attribute bytes (`TILES_PROPS`).
@@ -65,8 +65,8 @@ tiled2map -map map.json -dimension 20x11 -fileprefix master
 This will generate:
 
 ```
-master.png
-master.til
+master-tileset.png
+master-tileset.til
 master-bg-world.map
 master-fg-world.map
 master-refs.inc
