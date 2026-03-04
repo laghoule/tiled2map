@@ -3,6 +3,7 @@ package asm
 import (
 	"encoding/binary"
 	"fmt"
+	"path/filepath"
 	"os"
 
 	"github.com/laghoule/tiled2map/internal/pkg/tiled"
@@ -62,7 +63,7 @@ func (a *ASMLinker) convertToMap(sceneDimension Dimension, layer *tiled.Layer) [
 
 // writeMap writes a flat localID uint8 map to a file.
 func (a *ASMLinker) writeMap(sceneDimension Dimension, layer string, m []uint8) error {
-	fileName := fmt.Sprintf("%s-%s%s", a.FilePrefix, layer, mapExt)
+	fileName := filepath.Join(a.FileOutput.Path, fmt.Sprintf("%s-%s%s", a.FileOutput.FilePrefix, layer, mapExt))
 
 	mapFile, err := os.Create(fileName)
 	if err != nil {

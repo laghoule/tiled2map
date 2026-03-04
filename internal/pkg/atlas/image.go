@@ -7,6 +7,7 @@ import (
 	"image/draw"
 	"image/png"
 	"os"
+	"path/filepath"
 )
 
 // tilHeader represents the header of a TIL file.
@@ -56,8 +57,8 @@ func (m *Master) createIMG() error {
 }
 
 // SavePNG saves the master image to a file in PNG format.
-func (m *Master) savePNG(filePrefix string) error {
-	filename := fmt.Sprintf("%s-tileset.png", filePrefix)
+func (m *Master) savePNG() error {
+	filename := filepath.Join(m.FileOutput.Path, fmt.Sprintf("%s-tileset.png", m.FileOutput.FilePrefix))
 	masterFile, err := os.Create(filename)
 	if err != nil {
 		return fmt.Errorf("failed to create master file: %v", err)
@@ -72,8 +73,8 @@ func (m *Master) savePNG(filePrefix string) error {
 }
 
 // SaveTIL saves the raw image to a file in TIL format.
-func (m *Master) saveTIL(filePrefix string) error {
-	filename := fmt.Sprintf("%s-tileset.til", filePrefix)
+func (m *Master) saveTIL() error {
+	filename := filepath.Join(m.FileOutput.Path, fmt.Sprintf("%s-tileset.til", m.FileOutput.FilePrefix))
 	tilFile, err := os.Create(filename)
 	if err != nil {
 		return fmt.Errorf("failed to create raw file: %v", err)

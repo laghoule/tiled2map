@@ -3,6 +3,7 @@ package asm
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 	"regexp"
 	"strings"
 	"text/template"
@@ -21,7 +22,7 @@ type TileRefsTemplateData struct {
 
 // createTilesRefs generates the ASM tile references file
 func (a *ASMLinker) createTilesRefs() error {
-	filename := fmt.Sprintf("%s-refs.inc", a.FilePrefix)
+	filename := filepath.Join(a.FileOutput.Path, fmt.Sprintf("%s-refs.inc", a.FileOutput.FilePrefix))
 	asmFile, err := os.Create(filename)
 	if err != nil {
 		return err

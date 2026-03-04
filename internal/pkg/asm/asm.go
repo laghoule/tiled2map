@@ -12,7 +12,7 @@ const (
 
 // ASMLinker links the map to scene and language generated references
 type ASMLinker struct {
-	FilePrefix   string
+	FileOutput FileOutput
 	TileMap      *tiled.Map
 	TilesInfo    []tiled.TileInfo
 	GIDToLocalID tiled.GIDToLocalTIL
@@ -24,10 +24,19 @@ type Dimension struct {
 	Height int
 }
 
+// FileOutput represents a file output for the atlas.
+type FileOutput struct {
+	Path       string
+	FilePrefix string
+}
+
 // NewASMLinker creates a new ASMLinker.
-func NewASMLinker(filePrefix string, tileMap *tiled.Map, tilesInfo []tiled.TileInfo, gidToLocalID tiled.GIDToLocalTIL) *ASMLinker {
+func NewASMLinker(destPath, filePrefix string, tileMap *tiled.Map, tilesInfo []tiled.TileInfo, gidToLocalID tiled.GIDToLocalTIL) *ASMLinker {
 	return &ASMLinker{
-		FilePrefix:   filePrefix,
+		FileOutput: FileOutput{
+			Path:       destPath,
+			FilePrefix: filePrefix,
+		},
 		TileMap:      tileMap,
 		TilesInfo:    tilesInfo,
 		GIDToLocalID: gidToLocalID,

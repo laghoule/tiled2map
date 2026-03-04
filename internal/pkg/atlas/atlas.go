@@ -12,12 +12,13 @@ import (
 
 // Master represents the master image that contains all the tiles from the Tiled map. It includes the image itself and the raw byte data of the image.
 type Master struct {
-	Tiles     []tiled.TileInfo
-	Image     *image.Paletted
-	RawImage  []byte
-	Palette   color.Palette
-	TileCount int
-	Dimension Dimension
+	FileOutput FileOutput
+	Tiles      []tiled.TileInfo
+	Image      *image.Paletted
+	RawImage   []byte
+	Palette    color.Palette
+	TileCount  int
+	Dimension  Dimension
 }
 
 // Dimension represents the width and height of a tile
@@ -26,12 +27,18 @@ type Dimension struct {
 	Height int
 }
 
+// FileOutput represents a file output for the atlas.
+type FileOutput struct {
+	Path       string
+	FilePrefix string
+}
+
 // NewMaster creates a new Master instance with the given tiles.
-func NewMaster(tiles []tiled.TileInfo) (*Master, error) {
+func NewMaster(destPath string, filePrefix string, tiles []tiled.TileInfo) (*Master, error) {
 	if len(tiles) == 0 {
 		return nil, fmt.Errorf("tiles cannot be nil or empty")
 	}
-	
+
 	width, height := getTileDimension(tiles[0])
 
 	tilesCount := len(tiles)
@@ -53,6 +60,10 @@ func NewMaster(tiles []tiled.TileInfo) (*Master, error) {
 	masterImg.Palette = firstTilePal.Palette
 
 	return &Master{
+		FileOutput: FileOutput{
+			Path:       destPath,
+			FilePrefix: filePrefix,
+		},
 		Tiles:     tiles,
 		Image:     masterImg,
 		RawImage:  []byte{},
@@ -66,16 +77,16 @@ func NewMaster(tiles []tiled.TileInfo) (*Master, error) {
 }
 
 // CreateAndSave creates the master image and saves it to a file in PNG format.
-func (m *Master) CreateAndSave(filePrefix string) error {
+func (m *Master) CreateAndSave() error {
 	if err := m.createIMG(); err != nil {
 		return err
 	}
 
-	if err := m.savePNG(filePrefix); err != nil {
+	if err := m.savePNG(); err != nil {
 		return err
 	}
 
-	if err := m.saveTIL(filePrefix); err != nil {
+	if err := m.saveTIL(); err != nil {
 		return err
 	}
 

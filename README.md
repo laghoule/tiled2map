@@ -7,7 +7,7 @@
 The tool takes a Tiled map exported as JSON and produces:
 
 - **`<prefix>-tileset.png`** — A master tile atlas image containing all unique tiles used in the map, packed vertically.
-- **`<prefix>.tileset.til`** — A binary tile atlas file (raw indexed pixel data) with a small header, suitable for direct loading on target hardware.
+- **`<prefix>-tileset.til`** — A binary tile atlas file (raw indexed pixel data) with a small header, suitable for direct loading on target hardware.
 - **`<prefix>-bg-world.map`** — Binary background layer map data, organized by scenes.
 - **`<prefix>-fg-world.map`** — Binary foreground layer map data, organized by scenes.
 - **`<prefix>-refs.inc`** — An assembly include file listing per-tile attribute bytes (`TILES_PROPS`).
@@ -45,32 +45,33 @@ Tiles can carry a custom integer property named **`attr`** in Tiled. This value 
 ## Usage
 
 ```
-tiled2map -map <path/to/map.json> [-dimension <WxH>] [-fileprefix <prefix>]
+tiled2map -map <path/to/map.json> [-dest <path>] [-dimension <WxH>] [-fileprefix <prefix>]
 ```
 
 ### Flags
 
-| Flag          | Default      | Description                                |
-| ------------- | ------------ | ------------------------------------------ |
-| `-map`        | _(required)_ | Path to the Tiled map file in JSON format  |
-| `-dimension`  | `20x11`      | Width × height of each scene (in tiles)    |
-| `-fileprefix` | `master`     | Prefix used for all generated output files |
+| Flag          | Default      | Description                                      |
+| ------------- | ------------ | ------------------------------------------------ |
+| `-map`        | _(required)_ | Path to the Tiled map file in JSON format        |
+| `-dest`       | `.`          | Destination directory for the generated files    |
+| `-dimension`  | `20x11`      | Width × height of each scene (in tiles)          |
+| `-fileprefix` | `master`     | Prefix used for all generated output files       |
 
 ### Example
 
 ```
-tiled2map -map map.json -dimension 20x11 -fileprefix master
+tiled2map -map map.json -dest ./output -dimension 20x11 -fileprefix master
 ```
 
 This will generate:
 
 ```
-master-tileset.png
-master-tileset.til
-master-bg-world.map
-master-fg-world.map
-master-refs.inc
-master-scene.inc
+output/master-tileset.png
+output/master-tileset.til
+output/master-bg-world.map
+output/master-fg-world.map
+output/master-refs.inc
+output/master-scene.inc
 ```
 
 ## Output File Formats
@@ -166,7 +167,7 @@ docker build \
 Run with Docker:
 
 ```
-docker run --rm -v $(pwd):/data tiled2map -map /data/map.json -fileprefix /data/master
+docker run --rm -v $(pwd):/data tiled2map -map /data/map.json -dest /data/output -fileprefix master
 ```
 
 ## License

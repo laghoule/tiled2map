@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"flag"
 	"fmt"
 	"os"
@@ -18,6 +19,7 @@ var (
 func main() {
 	fmt.Printf("tiled2map version: %s, git commit: %s\n", version, gitCommit)
 	mapFile := flag.String("map", "", "Path to the Tiled map file (JSON format)")
+	destPath := flag.String("dest", ".", "Destination path for the generated files")
 	sceneDimension := flag.String("dimension", "20x11", "Dimension of each scenes")
 	filePrefix := flag.String("fileprefix", "master", "Prefix for the generated files")
 	flag.Parse()
@@ -25,6 +27,10 @@ func main() {
 	if *mapFile == "" {
 		flag.Usage()
 		exitWithError(fmt.Errorf("map file not specified"))
+	}
+
+	if err := validateDestPath(*destPath); err != nil {
+		exitWithError(err)
 	}
 
 	tileMap, err := tiled.NewMap(*mapFile)
@@ -36,13 +42,13 @@ func main() {
 	tilesInfo := tiled.GetSortedTilesInfo(allGIDs, tileMap.TileSets)
 	gidLocalTIL := tiled.GetGIDToLocalTIL(allGIDs)
 
-	master, err := atlas.NewMaster(tilesInfo)
+	master, err := atlas.NewMaster(*destPath, *filePrefix, tilesInfo)
 	if err != nil {
 		exitWithError(err)
 	}
 
 	// Create and save the master atlas file
-	err = master.CreateAndSave(*filePrefix)
+	err = master.CreateAndSave()
 	if err != nil {
 		exitWithError(err)
 	}
@@ -54,11 +60,26 @@ func main() {
 	}
 
 	// Create and save the ASM file with the extracted scene dimension
-	asmLinker := asm.NewASMLinker(*filePrefix, tileMap, tilesInfo, gidLocalTIL)
+	asmLinker := asm.NewASMLinker(*destPath, *filePrefix, tileMap, tilesInfo, gidLocalTIL)
 	err = asmLinker.CreateAndSave(dimension)
 	if err != nil {
 		exitWithError(err)
 	}
+}
+
+// validateDestPath validates the destination path for the generated files
+func validateDestPath(destPath string) error {
+	fInfo, err := os.Lstat(destPath)
+	if err != nil {
+		if errors.Is(err, os.ErrNotExist) {
+			return fmt.Errorf("destination path %s does not exist", destPath)
+		}
+		return fmt.Errorf("failed to validate destination path: %v", err)
+	}
+	if !fInfo.IsDir() {
+		return fmt.Errorf("destination path is not a directory")
+	}
+	return nil
 }
 
 // exitWithError prints the error message to standard error and exits the program with a non-zero status code

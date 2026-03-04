@@ -3,6 +3,7 @@ package asm
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 	"text/template"
 )
 
@@ -54,7 +55,7 @@ func (a *ASMLinker) createScene(sceneDimension Dimension) error {
 		}
 	}
 
-	filename := fmt.Sprintf("%s-scene.%s", a.FilePrefix, includeExt)
+	filename := filepath.Join(a.FileOutput.Path, fmt.Sprintf("%s-scene.%s", a.FileOutput.FilePrefix, includeExt))
 	sceneFile, err := os.Create(filename)
 	if err != nil {
 		return fmt.Errorf("failed to create scene file: %w", err)
