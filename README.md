@@ -71,7 +71,7 @@ output/master-ts.til
 output/master-bg.map
 output/master-fg.map
 output/master-refs.inc
-output/master-scene.inc
+output/master-scne.inc
 ```
 
 ## Output File Formats
@@ -113,7 +113,7 @@ TILES_PROPS LABEL BYTE
   ...
 ```
 
-### `-scene.inc` — Assembly Scene Descriptors
+### `-scne.inc` — Assembly Scene Descriptors
 
 The file declares two map buffers (`map_bg_buffer` and `map_fg_buffer`), each sized to hold all tiles of the entire map plus a 2-byte header. It then defines one `SCENE` entry per scene, with references to the shared map offset and neighboring scenes (North, South, East, West). A value of `0` means no neighbor in that direction.
 
