@@ -28,11 +28,11 @@ func (a *ASMLinker) createMap(sceneDimension Dimension) error {
 	bgMap := a.convertToMap(sceneDimension, bg)
 	fgMap := a.convertToMap(sceneDimension, fg)
 
-	if err = a.writeMap(sceneDimension, "bg-world", bgMap); err != nil {
+	if err = a.writeMap(sceneDimension, "bg", bgMap); err != nil {
 		return fmt.Errorf("failed to write bg map: %w", err)
 	}
 
-	if err = a.writeMap(sceneDimension, "fg-world", fgMap); err != nil {
+	if err = a.writeMap(sceneDimension, "fg", fgMap); err != nil {
 		return fmt.Errorf("failed to write fg map: %w", err)
 	}
 

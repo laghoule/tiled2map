@@ -58,7 +58,7 @@ func (m *Master) createIMG() error {
 
 // SavePNG saves the master image to a file in PNG format.
 func (m *Master) savePNG() error {
-	filename := filepath.Join(m.FileOutput.Path, fmt.Sprintf("%s-tileset.png", m.FileOutput.FilePrefix))
+	filename := filepath.Join(m.FileOutput.Path, fmt.Sprintf("%s-ts.png", m.FileOutput.FilePrefix))
 	masterFile, err := os.Create(filename)
 	if err != nil {
 		return fmt.Errorf("failed to create master file: %v", err)
@@ -74,7 +74,7 @@ func (m *Master) savePNG() error {
 
 // SaveTIL saves the raw image to a file in TIL format.
 func (m *Master) saveTIL() error {
-	filename := filepath.Join(m.FileOutput.Path, fmt.Sprintf("%s-tileset.til", m.FileOutput.FilePrefix))
+	filename := filepath.Join(m.FileOutput.Path, fmt.Sprintf("%s-ts.til", m.FileOutput.FilePrefix))
 	tilFile, err := os.Create(filename)
 	if err != nil {
 		return fmt.Errorf("failed to create raw file: %v", err)
