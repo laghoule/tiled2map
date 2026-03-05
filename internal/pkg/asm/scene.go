@@ -7,7 +7,7 @@ import (
 	"text/template"
 )
 
-// sceneTemplateData represents the data required to generate a scene template.
+// SceneTemplateData represents the data required to generate a single scene entry.
 type SceneTemplateData struct {
 	Name      string
 	MapOffset int
@@ -16,6 +16,12 @@ type SceneTemplateData struct {
 	EastName  string
 	WestName  string
 	MusicName string
+}
+
+// SceneTemplatePayload is the top-level data passed to the scene template.
+type SceneTemplatePayload struct {
+	BufferSize int
+	Scenes     []SceneTemplateData
 }
 
 // createScene generates a scene template based on the provided dimension.
@@ -62,7 +68,16 @@ func (a *ASMLinker) createScene(sceneDimension Dimension) error {
 	}
 	defer sceneFile.Close()
 
-	err = tpl.Execute(sceneFile, scene)
+	// BufferSize is the total number of bytes needed for bg/fg map buffers:
+	// all tiles across the entire map, plus the 2-byte header per file.
+	bufferSize := a.TileMap.Width*a.TileMap.Height + mapHeaderSize
+
+	payload := SceneTemplatePayload{
+		BufferSize: bufferSize,
+		Scenes:     scene,
+	}
+
+	err = tpl.Execute(sceneFile, payload)
 	if err != nil {
 		return fmt.Errorf("failed to execute scene template: %w", err)
 	}

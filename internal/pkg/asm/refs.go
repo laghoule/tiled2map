@@ -11,6 +11,7 @@ import (
 
 const (
 	tileAttribute = "attr"
+	tilHeaderSize = 3
 )
 
 // TileRefsTemplateData is the data structure for the tiles references template
@@ -18,6 +19,12 @@ type TileRefsTemplateData struct {
 	GID         int
 	SourceImage string
 	Attribute   string
+}
+
+// TileRefsTemplatePayload is the top-level data passed to the tiles references template
+type TileRefsTemplatePayload struct {
+	BufferSize int
+	TilesRefs  []TileRefsTemplateData
 }
 
 // createTilesRefs generates the ASM tile references file
@@ -66,12 +73,19 @@ func (a *ASMLinker) createTilesRefs() error {
 		})
 	}
 
+	bufferSize := (a.TileMap.TileWidth * a.TileMap.TileHeight * len(a.TilesInfo)) + tilHeaderSize
+
+	payload := TileRefsTemplatePayload{
+		BufferSize: bufferSize,
+		TilesRefs:  tilesRefs,
+	}
+
 	tpl, err := template.ParseFiles("tmpl/tiles_props.tmpl")
 	if err != nil {
 		return fmt.Errorf("failed to parse template: %v", err)
 	}
 
-	err = tpl.Execute(asmFile, tilesRefs)
+	err = tpl.Execute(asmFile, payload)
 	if err != nil {
 		return fmt.Errorf("failed to execute template: %v", err)
 	}
