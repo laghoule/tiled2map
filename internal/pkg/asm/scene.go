@@ -39,7 +39,7 @@ func (a *ASMLinker) createScene(sceneDimension Dimension) error {
 	// Scene neighbor helper
 	getNeighbor := func(sx, sy int, cond bool) string {
 		if cond {
-			return fmt.Sprintf("OFFSET SCENE_%d_%d", sx, sy)
+			return fmt.Sprintf("OFFSET scene_%d_%d", sx, sy)
 		}
 		return "0"
 	}
@@ -50,13 +50,13 @@ func (a *ASMLinker) createScene(sceneDimension Dimension) error {
 			currentOffset := ((y*numScenesX)+x)*sceneTiles + int(mapHeaderSize)
 
 			scene = append(scene, SceneTemplateData{
-				Name:      fmt.Sprintf("SCENE_%d_%d", x, y),
+				Name:      fmt.Sprintf("scene_%d_%d", x, y),
 				MapOffset: currentOffset,
 				NorthName: getNeighbor(x, y-1, y > 0),
 				SouthName: getNeighbor(x, y+1, y < numScenesY-1),
 				EastName:  getNeighbor(x+1, y, x < numScenesX-1),
 				WestName:  getNeighbor(x-1, y, x > 0),
-				MusicName: fmt.Sprintf("MUSIC_%d_%d", x, y),
+				MusicName: fmt.Sprintf("music_%d_%d", x, y),
 			})
 		}
 	}
