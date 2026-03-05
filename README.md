@@ -11,7 +11,7 @@ The tool takes a Tiled map exported as JSON and produces:
 - **`<prefix>-bg.map`** — Binary background layer map data, organized by scenes.
 - **`<prefix>-fg.map`** — Binary foreground layer map data, organized by scenes.
 - **`<prefix>-refs.inc`** — An assembly include file declaring the tileset buffer (`TILESET_BUFFER`) and listing per-tile attribute bytes (`TILES_PROPS`).
-- **`<prefix>-scene.inc`** — An assembly include file declaring the map buffers (`map_bg_buffer`, `map_fg_buffer`) and describing each scene with its neighbors and music reference.
+- **`<prefix>-scne.inc`** — An assembly include file declaring the map buffers (`map_bg_buffer`, `map_fg_buffer`) and describing each scene with its neighbors and music reference.
 
 ## Pipeline
 
