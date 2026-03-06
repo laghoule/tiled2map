@@ -11,11 +11,12 @@
 ;   West scene
 ; >
 
-map_bg_buffer DB {{ .BufferSize }} DUP(0)
-map_fg_buffer DB {{ .BufferSize }} DUP(0)
+{{ $prefix := .Prefix -}}
+{{ .Prefix }}_bg_buffer DB {{ .BufferSize }} DUP(0)
+{{ .Prefix }}_fg_buffer DB {{ .BufferSize }} DUP(0)
 
 {{ range $i, $s := .Scenes -}}
 ; --- Scene # {{ $i }} ---
-{{ $s.Name }} SCENE <OFFSET map_bg_buffer + {{ $s.MapOffset }}, OFFSET map_fg_buffer + {{ $s.MapOffset }}, {{ $s.NorthName }}, {{ $s.SouthName }}, {{ $s.EastName }}, {{ $s.WestName }}>
+{{ $s.Name }} SCENE <OFFSET {{ $prefix }}_bg_buffer + {{ $s.MapOffset }}, OFFSET {{ $prefix }}_fg_buffer + {{ $s.MapOffset }}, {{ $s.NorthName }}, {{ $s.SouthName }}, {{ $s.EastName }}, {{ $s.WestName }}>
 
 {{ end }}

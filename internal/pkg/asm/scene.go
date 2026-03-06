@@ -20,6 +20,7 @@ type SceneTemplateData struct {
 
 // SceneTemplatePayload is the top-level data passed to the scene template.
 type SceneTemplatePayload struct {
+	Prefix     string
 	BufferSize int
 	Scenes     []SceneTemplateData
 }
@@ -39,7 +40,7 @@ func (a *ASMLinker) createScene(sceneDimension Dimension) error {
 	// Scene neighbor helper
 	getNeighbor := func(sx, sy int, cond bool) string {
 		if cond {
-			return fmt.Sprintf("OFFSET scene_%d_%d", sx, sy)
+			return fmt.Sprintf("OFFSET %s_scene_%d_%d", a.FileOutput.FilePrefix, sx, sy)
 		}
 		return "0"
 	}
@@ -50,13 +51,13 @@ func (a *ASMLinker) createScene(sceneDimension Dimension) error {
 			currentOffset := ((y*numScenesX)+x)*sceneTiles + int(mapHeaderSize)
 
 			scene = append(scene, SceneTemplateData{
-				Name:      fmt.Sprintf("scene_%d_%d", x, y),
+				Name:      fmt.Sprintf("%s_scene_%d_%d", a.FileOutput.FilePrefix, x, y),
 				MapOffset: currentOffset,
 				NorthName: getNeighbor(x, y-1, y > 0),
 				SouthName: getNeighbor(x, y+1, y < numScenesY-1),
 				EastName:  getNeighbor(x+1, y, x < numScenesX-1),
 				WestName:  getNeighbor(x-1, y, x > 0),
-				MusicName: fmt.Sprintf("music_%d_%d", x, y),
+				MusicName: fmt.Sprintf("%s_music_%d_%d", a.FileOutput.FilePrefix, x, y),
 			})
 		}
 	}
@@ -73,6 +74,7 @@ func (a *ASMLinker) createScene(sceneDimension Dimension) error {
 	bufferSize := a.TileMap.Width*a.TileMap.Height + mapHeaderSize
 
 	payload := SceneTemplatePayload{
+		Prefix:     a.FileOutput.FilePrefix,
 		BufferSize: bufferSize,
 		Scenes:     scene,
 	}

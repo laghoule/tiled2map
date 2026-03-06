@@ -23,6 +23,7 @@ type TileRefsTemplateData struct {
 
 // TileRefsTemplatePayload is the top-level data passed to the tiles references template
 type TileRefsTemplatePayload struct {
+	Prefix     string
 	BufferSize int
 	TilesRefs  []TileRefsTemplateData
 }
@@ -76,6 +77,7 @@ func (a *ASMLinker) createTilesRefs() error {
 	bufferSize := (a.TileMap.TileWidth * a.TileMap.TileHeight * len(a.TilesInfo)) + tilHeaderSize
 
 	payload := TileRefsTemplatePayload{
+		Prefix:     a.FileOutput.FilePrefix,
 		BufferSize: bufferSize,
 		TilesRefs:  tilesRefs,
 	}
