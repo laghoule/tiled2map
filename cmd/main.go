@@ -17,7 +17,7 @@ var (
 )
 
 func main() {
-	fmt.Printf("tiled2map version: %s, git commit: %s\n", version, gitCommit)
+	fmt.Printf("Tiled2map version: %s, git commit: %s\n", version, gitCommit)
 	mapFile := flag.String("map", "", "Path to the Tiled map file (JSON format)")
 	destPath := flag.String("dest", ".", "Destination path for the generated files")
 	sceneDimension := flag.String("dimension", "20x11", "Dimension of each scenes")
@@ -55,7 +55,7 @@ func main() {
 	fmt.Printf("Number of tiles: %d\n", len(tilesInfo))
 	fmt.Printf("Tiles dimension: %dx%d\n", tilesInfo[0].Dimension.Width, tilesInfo[0].Dimension.Height)
 	fmt.Printf("Tiles size: %d bytes", tilesInfo[0].Dimension.Width*tilesInfo[0].Dimension.Height)
-	fmt.Println("")
+	fmt.Println()
 
 	master, err := atlas.NewMaster(*destPath, *filePrefix, tilesInfo)
 	if err != nil {

@@ -47,7 +47,7 @@ func (a *ASMLinker) createScene(sceneDimension Dimension) error {
 	for y := range int(a.TileMap.Height) / sceneDimension.Height {
 		for x := range int(a.TileMap.Width) / sceneDimension.Width {
 			// offset is the 2D -> 1D transformation
-			currentOffset := ((y*numScenesX)+x)*sceneTiles + int(mapHeaderSize)
+			currentOffset := ((y * numScenesX) + x) * sceneTiles
 
 			scene = append(scene, SceneTemplateData{
 				Name:      fmt.Sprintf("%s_scene_%d_%d", a.FileOutput.FilePrefix, x, y),

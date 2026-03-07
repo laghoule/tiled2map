@@ -11,7 +11,7 @@ The tool takes a Tiled map exported as JSON and produces:
 - **`<prefix>-bg.map`** — Binary background layer map data, organized by scenes.
 - **`<prefix>-fg.map`** — Binary foreground layer map data, organized by scenes.
 - **`<prefix>-refs.inc`** — An assembly include file declaring the tileset buffer (`<prefix>_tileset_buffer`) and listing per-tile attribute bytes (`<prefix>_tiles_props`).
-- **`<prefix>-scne.inc`** — An assembly include file declaring the map buffers (`<prefix>_bg_buffer`, `<prefix>_fg_buffer`) and describing each scene with its neighbors.
+- **`<prefix>-scne.inc`** — An assembly include file declaring the map buffers (`<prefix>_bg_buffer`, `<prefix>_fg_buffer`) and describing each scene with its neighbors. The scene offset does **not** include the map file header.
 
 ## Pipeline
 
@@ -61,6 +61,22 @@ tiled2map -map <path/to/map.json> [-dest <path>] [-dimension <WxH>] [-fileprefix
 
 ```
 tiled2map -map map.json -dest ./output -dimension 20x11 -fileprefix master
+```
+
+During execution, the tool prints a summary of the map and tile information:
+
+```
+Tiled2map version: 1.0.0, git commit: abc1234
+
+Number of scenes: 4
+Scene dimension: 20x11
+Scenes size: 220 bytes
+
+Number of tiles: 42
+Tiles dimension: 16x16
+Tiles size: 256 bytes
+
+Done!
 ```
 
 This will generate:
@@ -129,13 +145,15 @@ master_scene_0_0 SCENE <OFFSET master_bg_buffer + 2, OFFSET master_fg_buffer + 2
 ```
 
 The buffer size formula is: `mapWidth × mapHeight + 2` (2-byte header).  
-The scene offset formula is: `((y × numScenesX) + x) × sceneTiles + 2`, where `sceneTiles = sceneWidth × sceneHeight`.
+The scene offset formula is: `((y × numScenesX) + x) × sceneTiles`, where `sceneTiles = sceneWidth × sceneHeight`.
 
 ## Building
 
 ### Prerequisites
 
 - Go 1.26 or later
+
+The templates are embedded directly in the binary at compile time — no external template files are needed at runtime.
 
 ### Build from source
 
