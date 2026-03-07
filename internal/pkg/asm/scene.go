@@ -1,11 +1,15 @@
 package asm
 
 import (
+	"embed"
 	"fmt"
 	"os"
 	"path/filepath"
 	"text/template"
 )
+
+//go:embed tmpl/*
+var tmplFS embed.FS
 
 // SceneTemplateData represents the data required to generate a single scene entry.
 type SceneTemplateData struct {
@@ -27,11 +31,6 @@ type SceneTemplatePayload struct {
 
 // createScene generates a scene template based on the provided dimension.
 func (a *ASMLinker) createScene(sceneDimension Dimension) error {
-	tpl, err := template.ParseFiles("tmpl/scene.tmpl")
-	if err != nil {
-		return fmt.Errorf("failed to parse scene template: %w", err)
-	}
-
 	scene := []SceneTemplateData{}
 	sceneTiles := sceneDimension.Width * sceneDimension.Height
 	numScenesX := int(a.TileMap.Width) / sceneDimension.Width
@@ -77,6 +76,11 @@ func (a *ASMLinker) createScene(sceneDimension Dimension) error {
 		Prefix:     a.FileOutput.FilePrefix,
 		BufferSize: bufferSize,
 		Scenes:     scene,
+	}
+
+	tpl, err := template.ParseFS(tmplFS, "tmpl/scene.tmpl")
+	if err != nil {
+		return fmt.Errorf("failed to parse scene template: %w", err)
 	}
 
 	err = tpl.Execute(sceneFile, payload)

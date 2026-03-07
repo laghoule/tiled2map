@@ -82,7 +82,7 @@ func (a *ASMLinker) createTilesRefs() error {
 		TilesRefs:  tilesRefs,
 	}
 
-	tpl, err := template.ParseFiles("tmpl/tiles_props.tmpl")
+	tpl, err := template.ParseFS(tmplFS, "tmpl/tiles_props.tmpl")
 	if err != nil {
 		return fmt.Errorf("failed to parse template: %v", err)
 	}
