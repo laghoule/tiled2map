@@ -29,11 +29,11 @@ func (m *Master) createIMG() error {
 
 		tilePalleted, ok := src.(*image.Paletted)
 		if !ok {
-			return fmt.Errorf("tile %d is not a paletted image", i)
+			return fmt.Errorf("tile %d, from %s is not a paletted image", i, tile.SourceImage)
 		}
 
 		if !arePaletteEqual(m.Palette, tilePalleted.Palette) {
-			return fmt.Errorf("each tile must have the same palette. Tile %d has a different palette", i)
+			return fmt.Errorf("each tile must have the same palette. Tile %d, from %s has a different palette", i, tile.SourceImage)
 		}
 
 		// extract tile from the image
