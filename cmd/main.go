@@ -42,6 +42,21 @@ func main() {
 	tilesInfo := tiled.GetSortedTilesInfo(allGIDs, tileMap.TileSets)
 	gidLocalTIL := tiled.GetGIDToLocalTIL(allGIDs)
 
+	sceneDim, err := asm.ExtractDimension(*sceneDimension)
+	if err != nil {
+		exitWithError(err)
+	}
+
+	fmt.Println()
+	fmt.Printf("Number of scenes: %d\n", (tileMap.Width*tileMap.Height)/(sceneDim.Width*sceneDim.Height))
+	fmt.Printf("Scene dimension: %dx%d\n", sceneDim.Width, sceneDim.Height)
+	fmt.Printf("Scenes size: %d bytes\n", sceneDim.Width*sceneDim.Height)
+	fmt.Println()
+	fmt.Printf("Number of tiles: %d\n", len(tilesInfo))
+	fmt.Printf("Tiles dimension: %dx%d\n", tilesInfo[0].Dimension.Width, tilesInfo[0].Dimension.Height)
+	fmt.Printf("Tiles size: %d bytes", tilesInfo[0].Dimension.Width*tilesInfo[0].Dimension.Height)
+	fmt.Println("")
+
 	master, err := atlas.NewMaster(*destPath, *filePrefix, tilesInfo)
 	if err != nil {
 		exitWithError(err)
@@ -65,6 +80,9 @@ func main() {
 	if err != nil {
 		exitWithError(err)
 	}
+
+	fmt.Println("")
+	fmt.Println("Done!")
 }
 
 // validateDestPath validates the destination path for the generated files
