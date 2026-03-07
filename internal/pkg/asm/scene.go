@@ -11,6 +11,10 @@ import (
 //go:embed tmpl/*
 var tmplFS embed.FS
 
+const (
+	layersLen = 2 // bg & fg
+)
+
 // SceneTemplateData represents the data required to generate a single scene entry.
 type SceneTemplateData struct {
 	Name      string
@@ -24,9 +28,10 @@ type SceneTemplateData struct {
 
 // SceneTemplatePayload is the top-level data passed to the scene template.
 type SceneTemplatePayload struct {
-	Prefix     string
-	BufferSize int
-	Scenes     []SceneTemplateData
+	Prefix       string
+	BufferSize   int
+	MapLayerSize int
+	Scenes       []SceneTemplateData
 }
 
 // createScene generates a scene template based on the provided dimension.
@@ -70,12 +75,14 @@ func (a *ASMLinker) createScene(sceneDimension Dimension) error {
 
 	// BufferSize is the total number of bytes needed for bg/fg map buffers:
 	// all tiles across the entire map, plus the 2-byte header per file.
-	bufferSize := a.TileMap.Width*a.TileMap.Height + mapHeaderSize
+	bufferSize := ((a.TileMap.Width * a.TileMap.Height) * layersLen) + mapHeaderSize
+	mapLayerSize := a.TileMap.Width * a.TileMap.Height
 
 	payload := SceneTemplatePayload{
-		Prefix:     a.FileOutput.FilePrefix,
-		BufferSize: bufferSize,
-		Scenes:     scene,
+		Prefix:       a.FileOutput.FilePrefix,
+		BufferSize:   bufferSize,
+		MapLayerSize: mapLayerSize,
+		Scenes:       scene,
 	}
 
 	tpl, err := template.ParseFS(tmplFS, "tmpl/scene.tmpl")

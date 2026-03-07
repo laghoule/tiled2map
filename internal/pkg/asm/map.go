@@ -3,15 +3,21 @@ package asm
 import (
 	"encoding/binary"
 	"fmt"
-	"path/filepath"
 	"os"
+	"path/filepath"
+	"slices"
 
 	"github.com/laghoule/tiled2map/internal/pkg/tiled"
 )
 
+type mapHeader struct {
+	width        uint8
+	height       uint8
+}
+
 const (
 	mapExt        = ".map"
-	mapHeaderSize = 2 // width + height
+	mapHeaderSize = 2 // width, height
 )
 
 func (a *ASMLinker) createMap(sceneDimension Dimension) error {
@@ -27,13 +33,10 @@ func (a *ASMLinker) createMap(sceneDimension Dimension) error {
 
 	bgMap := a.convertToMap(sceneDimension, bg)
 	fgMap := a.convertToMap(sceneDimension, fg)
+	mergedMap := slices.Concat(bgMap, fgMap)
 
-	if err = a.writeMap(sceneDimension, "bg", bgMap); err != nil {
-		return fmt.Errorf("failed to write bg map: %w", err)
-	}
-
-	if err = a.writeMap(sceneDimension, "fg", fgMap); err != nil {
-		return fmt.Errorf("failed to write fg map: %w", err)
+	if err = a.writeMap(sceneDimension, mergedMap); err != nil {
+		return err
 	}
 
 	return nil
@@ -62,8 +65,8 @@ func (a *ASMLinker) convertToMap(sceneDimension Dimension, layer *tiled.Layer) [
 }
 
 // writeMap writes a flat localID uint8 map to a file.
-func (a *ASMLinker) writeMap(sceneDimension Dimension, layer string, m []uint8) error {
-	fileName := filepath.Join(a.FileOutput.Path, fmt.Sprintf("%s-%s%s", a.FileOutput.FilePrefix, layer, mapExt))
+func (a *ASMLinker) writeMap(sceneDimension Dimension, m []uint8) error {
+	fileName := filepath.Join(a.FileOutput.Path, fmt.Sprintf("%s-wrld%s", a.FileOutput.FilePrefix, mapExt))
 
 	mapFile, err := os.Create(fileName)
 	if err != nil {
@@ -71,11 +74,13 @@ func (a *ASMLinker) writeMap(sceneDimension Dimension, layer string, m []uint8) 
 	}
 	defer mapFile.Close()
 
-	// Write scene dimensions as header to map file
-	if err := binary.Write(mapFile, binary.LittleEndian, uint8(sceneDimension.Width)); err != nil {
-		return fmt.Errorf("failed to write map header: %w", err)
+	// Write the map header
+	header := mapHeader{
+		width:        uint8(sceneDimension.Width),
+		height:       uint8(sceneDimension.Height),
 	}
-	if err := binary.Write(mapFile, binary.LittleEndian, uint8(sceneDimension.Height)); err != nil {
+
+	if err := writeMapHeader(mapFile, header); err != nil {
 		return fmt.Errorf("failed to write map header: %w", err)
 	}
 
@@ -86,5 +91,13 @@ func (a *ASMLinker) writeMap(sceneDimension Dimension, layer string, m []uint8) 
 		}
 	}
 
+	return nil
+}
+
+// writeMapHeader writes a map header to a file.
+func writeMapHeader(file *os.File, header mapHeader) error {
+	if err := binary.Write(file, binary.LittleEndian, header); err != nil {
+		return fmt.Errorf("failed to write map header to file %s: %w", file.Name(), err)
+	}
 	return nil
 }

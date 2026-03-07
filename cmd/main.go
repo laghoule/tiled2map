@@ -47,14 +47,18 @@ func main() {
 		exitWithError(err)
 	}
 
+	if len(tilesInfo) == 0 {
+		exitWithError(fmt.Errorf("no tiles found"))
+	}
+
 	fmt.Println()
 	fmt.Printf("Number of scenes: %d\n", (tileMap.Width*tileMap.Height)/(sceneDim.Width*sceneDim.Height))
 	fmt.Printf("Scene dimension: %dx%d\n", sceneDim.Width, sceneDim.Height)
-	fmt.Printf("Scenes size: %d bytes\n", sceneDim.Width*sceneDim.Height)
+	fmt.Printf("Scene size: %d bytes\n", sceneDim.Width*sceneDim.Height)
 	fmt.Println()
 	fmt.Printf("Number of tiles: %d\n", len(tilesInfo))
-	fmt.Printf("Tiles dimension: %dx%d\n", tilesInfo[0].Dimension.Width, tilesInfo[0].Dimension.Height)
-	fmt.Printf("Tiles size: %d bytes", tilesInfo[0].Dimension.Width*tilesInfo[0].Dimension.Height)
+	fmt.Printf("Tile dimension: %dx%d\n", tilesInfo[0].Dimension.Width, tilesInfo[0].Dimension.Height)
+	fmt.Printf("Tile size: %d bytes", tilesInfo[0].Dimension.Width*tilesInfo[0].Dimension.Height)
 	fmt.Println()
 
 	master, err := atlas.NewMaster(*destPath, *filePrefix, tilesInfo)
@@ -68,15 +72,9 @@ func main() {
 		exitWithError(err)
 	}
 
-	// Extract scene dimension from the command line argument
-	dimension, err := asm.ExtractDimension(*sceneDimension)
-	if err != nil {
-		exitWithError(err)
-	}
-
 	// Create and save the ASM file with the extracted scene dimension
 	asmLinker := asm.NewASMLinker(*destPath, *filePrefix, tileMap, tilesInfo, gidLocalTIL)
-	err = asmLinker.CreateAndSave(dimension)
+	err = asmLinker.CreateAndSave(sceneDim)
 	if err != nil {
 		exitWithError(err)
 	}
