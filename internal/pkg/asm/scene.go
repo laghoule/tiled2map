@@ -29,8 +29,7 @@ type SceneData struct {
 
 // MapData represents the data required to generate the map data.
 type MapData struct {
-	Width     int
-	Height    int
+	Dimension Dimension
 	LayerSize int
 }
 
@@ -39,8 +38,9 @@ type SceneTemplatePayload struct {
 	Prefix     string
 	BufferSize int
 
-	MapData MapData
-	Scenes  []SceneData
+	MapData        MapData
+	SceneDimension Dimension
+	Scenes         []SceneData
 }
 
 // createScene generates a scene template based on the provided dimension.
@@ -90,9 +90,15 @@ func (a *ASMLinker) createScene(sceneDimension Dimension) error {
 		Prefix:     a.FileOutput.FilePrefix,
 		BufferSize: bufferSize,
 		MapData: MapData{
-			Width:     a.TileMap.Width,
-			Height:    a.TileMap.Height,
+			Dimension: Dimension{
+				Width:  a.TileMap.Width,
+				Height: a.TileMap.Height,
+			},
 			LayerSize: mapLayerSize,
+		},
+		SceneDimension: Dimension{
+			Width:  sceneDimension.Width,
+			Height: sceneDimension.Height,
 		},
 		Scenes: scenes,
 	}

@@ -12,7 +12,7 @@ const (
 
 // ASMLinker links the map to scene and language generated references
 type ASMLinker struct {
-	FileOutput FileOutput
+	FileOutput   FileOutput
 	TileMap      *tiled.Map
 	TilesInfo    []tiled.TileInfo
 	GIDToLocalID tiled.GIDToLocalTIL
