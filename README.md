@@ -136,7 +136,7 @@ The file declares a single merged map buffer (`<prefix>_buffer`) sized to hold a
 ; DO NOT EDIT
 
 master_buffer DB 1764 DUP(0)
-master_layer_size EQU 880
+MASTER_LAYER_SIZE EQU 880
 
 ; --- Scene # 0 ---
 master_scene_0_0 SCENE <OFFSET master_buffer + 0, 0, OFFSET master_scene_0_1, OFFSET master_scene_1_0, 0>
