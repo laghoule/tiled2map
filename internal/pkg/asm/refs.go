@@ -11,21 +11,29 @@ import (
 
 const (
 	tileAttribute = "attr"
-	tilHeaderSize = 3
 )
 
-// TileRefsTemplateData is the data structure for the tiles references template
-type TileRefsTemplateData struct {
+// TileRefsData is the data structure for the tiles references template
+type TileRefsData struct {
 	GID         int
 	SourceImage string
 	Attribute   string
+}
+
+// TileData is the data structure for the tiles data template
+type TileData struct {
+	Width  int
+	Height int
+	Count  int
 }
 
 // TileRefsTemplatePayload is the top-level data passed to the tiles references template
 type TileRefsTemplatePayload struct {
 	Prefix     string
 	BufferSize int
-	TilesRefs  []TileRefsTemplateData
+
+	TileData  TileData
+	TilesRefs []TileRefsData
 }
 
 // createTilesRefs generates the ASM tile references file
@@ -37,7 +45,7 @@ func (a *ASMLinker) createTilesRefs() error {
 	}
 	defer asmFile.Close()
 
-	tilesRefs := []TileRefsTemplateData{}
+	tilesRefs := []TileRefsData{}
 
 	for _, tileInfo := range a.TilesInfo {
 		attribute := ""
@@ -67,22 +75,32 @@ func (a *ASMLinker) createTilesRefs() error {
 			attribute = "00000000b"
 		}
 
-		tilesRefs = append(tilesRefs, TileRefsTemplateData{
+		tilesRefs = append(tilesRefs, TileRefsData{
 			GID:         tileInfo.GID,
 			SourceImage: tileInfo.SourceImage,
 			Attribute:   attribute,
 		})
 	}
 
-	bufferSize := (a.TileMap.TileWidth * a.TileMap.TileHeight * len(a.TilesInfo)) + tilHeaderSize
+	tilesCount := len(a.TilesInfo)
+	bufferSize := (a.TileMap.TileWidth * a.TileMap.TileHeight * tilesCount)
 
 	payload := TileRefsTemplatePayload{
 		Prefix:     a.FileOutput.FilePrefix,
 		BufferSize: bufferSize,
-		TilesRefs:  tilesRefs,
+		TileData: TileData{
+			Width:  a.TileMap.TileWidth,
+			Height: a.TileMap.TileHeight,
+			Count:  tilesCount,
+		},
+		TilesRefs: tilesRefs,
 	}
 
-	tpl, err := template.ParseFS(tmplFS, "tmpl/tiles_props.tmpl")
+	funcMap := template.FuncMap{
+		"toUpper": strings.ToUpper,
+	}
+
+	tpl, err := template.New("tiles_props.tmpl").Funcs(funcMap).ParseFS(tmplFS, "tmpl/tiles_props.tmpl")
 	if err != nil {
 		return fmt.Errorf("failed to parse template: %v", err)
 	}

@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"text/template"
 	"strings"
+	"text/template"
 )
 
 //go:embed tmpl/*
@@ -16,8 +16,8 @@ const (
 	layersLen = 2 // bg & fg
 )
 
-// SceneTemplateData represents the data required to generate a single scene entry.
-type SceneTemplateData struct {
+// SceneData represents the data required to generate a single scene entry.
+type SceneData struct {
 	Name      string
 	MapOffset int
 	NorthName string
@@ -27,17 +27,25 @@ type SceneTemplateData struct {
 	MusicName string
 }
 
+// MapData represents the data required to generate the map data.
+type MapData struct {
+	Width     int
+	Height    int
+	LayerSize int
+}
+
 // SceneTemplatePayload is the top-level data passed to the scene template.
 type SceneTemplatePayload struct {
-	Prefix       string
-	BufferSize   int
-	MapLayerSize int
-	Scenes       []SceneTemplateData
+	Prefix     string
+	BufferSize int
+
+	MapData MapData
+	Scenes  []SceneData
 }
 
 // createScene generates a scene template based on the provided dimension.
 func (a *ASMLinker) createScene(sceneDimension Dimension) error {
-	scene := []SceneTemplateData{}
+	scenes := []SceneData{}
 	sceneTiles := sceneDimension.Width * sceneDimension.Height
 	numScenesX := int(a.TileMap.Width) / sceneDimension.Width
 	numScenesY := int(a.TileMap.Height) / sceneDimension.Height
@@ -55,7 +63,7 @@ func (a *ASMLinker) createScene(sceneDimension Dimension) error {
 			// offset is the 2D -> 1D transformation
 			currentOffset := ((y * numScenesX) + x) * sceneTiles
 
-			scene = append(scene, SceneTemplateData{
+			scenes = append(scenes, SceneData{
 				Name:      fmt.Sprintf("%s_scene_%d_%d", a.FileOutput.FilePrefix, x, y),
 				MapOffset: currentOffset,
 				NorthName: getNeighbor(x, y-1, y > 0),
@@ -74,18 +82,21 @@ func (a *ASMLinker) createScene(sceneDimension Dimension) error {
 	}
 	defer sceneFile.Close()
 
-	// BufferSize is the total number of bytes needed for bg/fg map buffers:
-	// all tiles across the entire map, plus the 2-byte header per file.
-	bufferSize := ((a.TileMap.Width * a.TileMap.Height) * layersLen) + mapHeaderSize
+	// BufferSize is the total number of bytes needed for bg/fg map buffers
+	bufferSize := ((a.TileMap.Width * a.TileMap.Height) * layersLen)
 	mapLayerSize := a.TileMap.Width * a.TileMap.Height
 
 	payload := SceneTemplatePayload{
-		Prefix:       a.FileOutput.FilePrefix,
-		BufferSize:   bufferSize,
-		MapLayerSize: mapLayerSize,
-		Scenes:       scene,
+		Prefix:     a.FileOutput.FilePrefix,
+		BufferSize: bufferSize,
+		MapData: MapData{
+			Width:     a.TileMap.Width,
+			Height:    a.TileMap.Height,
+			LayerSize: mapLayerSize,
+		},
+		Scenes: scenes,
 	}
-	
+
 	funcMap := template.FuncMap{
 		"toUpper": strings.ToUpper,
 	}
@@ -95,8 +106,6 @@ func (a *ASMLinker) createScene(sceneDimension Dimension) error {
 		return fmt.Errorf("failed to parse scene template: %w", err)
 	}
 
-	tpl.Funcs(funcMap)
-	
 	err = tpl.Execute(sceneFile, payload)
 	if err != nil {
 		return fmt.Errorf("failed to execute scene template: %w", err)

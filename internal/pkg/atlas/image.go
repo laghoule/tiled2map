@@ -1,7 +1,6 @@
 package atlas
 
 import (
-	"encoding/binary"
 	"fmt"
 	"image"
 	"image/draw"
@@ -9,13 +8,6 @@ import (
 	"os"
 	"path/filepath"
 )
-
-// tilHeader represents the header of a TIL file.
-type tilHeader struct {
-	Width      uint8
-	Height     uint8
-	TilesCount uint8
-}
 
 // Create generates the master image by drawing each tile onto it.
 func (m *Master) createIMG() error {
@@ -81,27 +73,9 @@ func (m *Master) saveTIL() error {
 	}
 	defer tilFile.Close()
 
-	h := tilHeader{
-		Width:      uint8(m.Dimension.Width),
-		Height:     uint8(m.Dimension.Height),
-		TilesCount: uint8(m.TileCount),
-	}
-
-	if err := writeTILHeader(tilFile, h); err != nil {
-		return err
-	}
-
 	if _, err = tilFile.Write(m.RawImage); err != nil {
 		return fmt.Errorf("failed to write data to file %s: %v", filename, err)
 	}
 
-	return nil
-}
-
-// writeHeader writes the header to the raw file.
-func writeTILHeader(file *os.File, header tilHeader) error {
-	if err := binary.Write(file, binary.LittleEndian, header); err != nil {
-		return fmt.Errorf("failed to write header to file %s: %v", file.Name(), err)
-	}
 	return nil
 }

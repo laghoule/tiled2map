@@ -10,14 +10,8 @@ import (
 	"github.com/laghoule/tiled2map/internal/pkg/tiled"
 )
 
-type mapHeader struct {
-	width        uint8
-	height       uint8
-}
-
 const (
-	mapExt        = ".map"
-	mapHeaderSize = 2 // width, height
+	mapExt = ".map"
 )
 
 func (a *ASMLinker) createMap(sceneDimension Dimension) error {
@@ -74,16 +68,6 @@ func (a *ASMLinker) writeMap(sceneDimension Dimension, m []uint8) error {
 	}
 	defer mapFile.Close()
 
-	// Write the map header
-	header := mapHeader{
-		width:        uint8(sceneDimension.Width),
-		height:       uint8(sceneDimension.Height),
-	}
-
-	if err := writeMapHeader(mapFile, header); err != nil {
-		return fmt.Errorf("failed to write map header: %w", err)
-	}
-
 	for data := range m {
 		err := binary.Write(mapFile, binary.LittleEndian, m[data])
 		if err != nil {
@@ -91,13 +75,5 @@ func (a *ASMLinker) writeMap(sceneDimension Dimension, m []uint8) error {
 		}
 	}
 
-	return nil
-}
-
-// writeMapHeader writes a map header to a file.
-func writeMapHeader(file *os.File, header mapHeader) error {
-	if err := binary.Write(file, binary.LittleEndian, header); err != nil {
-		return fmt.Errorf("failed to write map header to file %s: %w", file.Name(), err)
-	}
 	return nil
 }
