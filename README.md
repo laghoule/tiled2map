@@ -139,6 +139,8 @@ master_buffer DB 1760 DUP(0)
 MASTER_LAYER_SIZE EQU 880
 MASTER_LAYER_WIDTH EQU 40
 MASTER_LAYER_HEIGHT EQU 22
+MASTER_SCENE_WIDTH EQU 20
+MASTER_SCENE_HEIGHT EQU 11
 
 ; --- Scene # 0 ---
 master_scene_0_0 SCENE <OFFSET master_buffer + 0, 0, OFFSET master_scene_0_1, OFFSET master_scene_1_0, 0>
@@ -147,6 +149,7 @@ master_scene_0_0 SCENE <OFFSET master_buffer + 0, 0, OFFSET master_scene_0_1, OF
 The buffer size formula is: `mapWidth × mapHeight × 2` (both bg and fg layers merged, no header).  
 `LAYER_SIZE` equals `mapWidth × mapHeight` — the size in bytes of one layer. Use it in your reader to locate the fg layer at `OFFSET <prefix>_buffer + <prefix>_LAYER_SIZE`.  
 `LAYER_WIDTH` and `LAYER_HEIGHT` are the full map dimensions in tiles.  
+`SCENE_WIDTH` and `SCENE_HEIGHT` are the dimensions of a single scene in tiles.  
 The scene offset formula is: `((y × numScenesX) + x) × sceneTiles`, where `sceneTiles = sceneWidth × sceneHeight`.
 
 ## Building
