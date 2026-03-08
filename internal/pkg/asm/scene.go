@@ -6,6 +6,7 @@ import (
 	"os"
 	"path/filepath"
 	"text/template"
+	"strings"
 )
 
 //go:embed tmpl/*
@@ -84,12 +85,18 @@ func (a *ASMLinker) createScene(sceneDimension Dimension) error {
 		MapLayerSize: mapLayerSize,
 		Scenes:       scene,
 	}
+	
+	funcMap := template.FuncMap{
+		"toUpper": strings.ToUpper,
+	}
 
-	tpl, err := template.ParseFS(tmplFS, "tmpl/scene.tmpl")
+	tpl, err := template.New("scene.tmpl").Funcs(funcMap).ParseFS(tmplFS, "tmpl/scene.tmpl")
 	if err != nil {
 		return fmt.Errorf("failed to parse scene template: %w", err)
 	}
 
+	tpl.Funcs(funcMap)
+	
 	err = tpl.Execute(sceneFile, payload)
 	if err != nil {
 		return fmt.Errorf("failed to execute scene template: %w", err)

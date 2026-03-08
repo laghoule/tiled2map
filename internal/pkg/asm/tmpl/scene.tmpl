@@ -12,7 +12,7 @@
 
 {{ $prefix := .Prefix -}}
 {{ .Prefix }}_buffer DB {{ .BufferSize }} DUP(0)
-{{ .Prefix }}_layer_size EQU {{ .MapLayerSize }}
+{{ .Prefix | toUpper }}_LAYER_SIZE EQU {{ .MapLayerSize }}
 
 {{ range $i, $s := .Scenes -}}
 ; --- Scene # {{ $i }} ---
