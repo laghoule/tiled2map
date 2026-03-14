@@ -24,7 +24,6 @@ type SceneData struct {
 	SouthName string
 	EastName  string
 	WestName  string
-	MusicName string
 }
 
 // MapData represents the data required to generate the map data.
@@ -70,7 +69,6 @@ func (a *ASMLinker) createScene(sceneDimension Dimension) error {
 				SouthName: getNeighbor(x, y+1, y < numScenesY-1),
 				EastName:  getNeighbor(x+1, y, x < numScenesX-1),
 				WestName:  getNeighbor(x-1, y, x > 0),
-				MusicName: fmt.Sprintf("%s_music_%d_%d", a.FileOutput.FilePrefix, x, y),
 			})
 		}
 	}
