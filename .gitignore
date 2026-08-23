@@ -1,4 +1,4 @@
-tiled2map
+./tiled2map
 /*.map
 /*.inc
 /*.png
