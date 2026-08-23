@@ -15,12 +15,16 @@ const (
 )
 
 func (a *ASMLinker) createMap(sceneDimension Dimension) error {
-	bg, err := a.TileMap.GetLayer(tiled.BackgroundLayerName)
+	if sceneDimension == (Dimension{}) {
+		return nil
+	}
+
+	bg, err := a.tileMap.GetLayer(tiled.BackgroundLayerName)
 	if err != nil {
 		return fmt.Errorf("failed to get background layer: %w", err)
 	}
 
-	fg, err := a.TileMap.GetLayer(tiled.ForegroundLayerName)
+	fg, err := a.tileMap.GetLayer(tiled.ForegroundLayerName)
 	if err != nil {
 		return fmt.Errorf("failed to get foreground layer: %w", err)
 	}
@@ -47,7 +51,7 @@ func (a *ASMLinker) convertToMap(sceneDimension Dimension, layer *tiled.Layer) [
 				for sceneX := x; sceneX < x+sceneDimension.Width; sceneX++ {
 					// (y * width) + x
 					gid := layer.Data[sceneX+sceneY*layer.Width]
-					localID := a.GIDToLocalID[gid]
+					localID := a.gIDToLocalID[gid]
 					m = append(m, localID)
 				}
 			}
@@ -60,7 +64,7 @@ func (a *ASMLinker) convertToMap(sceneDimension Dimension, layer *tiled.Layer) [
 
 // writeMap writes a flat localID uint8 map to a file.
 func (a *ASMLinker) writeMap(sceneDimension Dimension, m []uint8) error {
-	fileName := filepath.Join(a.FileOutput.Path, fmt.Sprintf("%s-wrld%s", a.FileOutput.FilePrefix, mapExt))
+	fileName := filepath.Join(a.fileOutput.Path, fmt.Sprintf("%s-wrld%s", a.fileOutput.FilePrefix, mapExt))
 
 	mapFile, err := os.Create(fileName)
 	if err != nil {

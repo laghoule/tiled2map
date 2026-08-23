@@ -9,7 +9,7 @@ WORKDIR /src
 RUN --mount=type=bind,source=.,target=.  \
   --mount=type=cache,target=/root/.cache/go-build \
   --mount=type=cache,target=/go/pkg \
-  CGO_ENABLED=0 GOOS=linux go build -ldflags="-X 'main.version=$VERSION' -X 'main.gitCommit=$GIT_COMMIT'" -o /tmp/tiled2map cmd/main.go
+  CGO_ENABLED=0 GOOS=linux go build -ldflags="-X 'main.version=$VERSION' -X 'main.gitCommit=$GIT_COMMIT'" -o /tmp/tiled2map ./cmd/tiled2map
 
 ##############################
 FROM scratch

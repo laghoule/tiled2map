@@ -6,6 +6,8 @@
 {{ .Prefix | toUpper }}_TILE_HEIGHT EQU {{ .TileData.Height }}
 {{ .Prefix | toUpper }}_TILES_COUNT EQU {{ .TileData.Count }}
 
-{{ .Prefix }}_tiles_props LABEL BYTE
+{{ if .GenerateProps }}
+{{- .Prefix }}_tiles_attributes LABEL BYTE
 {{ range $i, $t := .TilesRefs }}  DB {{ $t.Attribute }} ; Index: {{ $i }} (GID: {{ $t.GID }} Source: {{ $t.SourceImage }})
+{{ end }}
 {{ end }}

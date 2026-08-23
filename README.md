@@ -8,9 +8,9 @@ The tool takes a Tiled map exported as JSON and produces:
 
 - **`<prefix>-ts.png`** — A master tile atlas image containing all unique tiles used in the map, packed vertically.
 - **`<prefix>-ts.til`** — A binary tile atlas file (raw indexed pixel data) without a header, suitable for direct loading on target hardware. Tile dimensions and count are available as ASM constants in the `-refs.inc` file.
-- **`<prefix>-wrld.map`** — Binary map data containing both background and foreground layers merged, organized by scenes.
-- **`<prefix>-refs.inc`** — An assembly include file declaring the tileset buffer (`<prefix>_tileset_buffer`) and listing per-tile attribute bytes (`<prefix>_tiles_props`).
-- **`<prefix>-scne.inc`** — An assembly include file declaring a single merged map buffer (`<prefix>_buffer`) holding both background and foreground layer data, and describing each scene with its neighbors. The scene offset does **not** include the map file header.
+- **`<prefix>-wrld.map`** — Binary map data containing both background and foreground layers merged, organized by scenes. _(only generated when `-dimension` is specified)_
+- **`<prefix>-refs.inc`** — An assembly include file declaring the tileset buffer (`<prefix>_tileset_buffer`) and, when `-dimension` is specified, listing per-tile attribute bytes (`<prefix>_tiles_attributes`).
+- **`<prefix>-scne.inc`** — An assembly include file declaring a single merged map buffer (`<prefix>_buffer`) holding both background and foreground layer data, and describing each scene with its neighbors. The scene offset does **not** include the map file header. _(only generated when `-dimension` is specified)_
 
 ## Pipeline
 
@@ -35,11 +35,11 @@ The Tiled map **must** be exported in JSON format and contain the following name
 | `fg`       | Tile layer   | Foreground / sprite layer (required)  |
 | `bound`    | Object layer | Collision/boundary objects (optional) |
 
-The map must have non-zero dimensions, and its width and height must be exact multiples of the scene dimension.
+When `-dimension` is specified, the map width and height must be exact multiples of the scene dimension.
 
 All tilesets referenced by the map must use **paletted PNG images** sharing the same color palette (the palette of the first tileset image is used as the master palette).
 
-Tiles can carry a custom integer property named **`attr`** in Tiled. This value is written as a binary byte in the generated `TILES_PROPS` table in the refs include file. Tiles without this property default to `00000000b`.
+Tiles can carry a custom integer property named **`attr`** in Tiled. This value is written as a binary byte in the generated `tiles_attributes` table in the refs include file. Tiles without this property default to `00000000b`. The attributes table is only generated when `-dimension` is specified.
 
 ## Usage
 
@@ -47,13 +47,15 @@ Tiles can carry a custom integer property named **`attr`** in Tiled. This value 
 tiled2map -map <path/to/map.json> [-dest <path>] [-dimension <WxH>] [-fileprefix <prefix>]
 ```
 
+When `-dimension` is omitted, only the tile atlas files (`-ts.png`, `-ts.til`) and the refs include (`-refs.inc`, without the attributes table) are generated. Scene and attribute generation are disabled.
+
 ### Flags
 
 | Flag          | Default      | Description                                      |
 | ------------- | ------------ | ------------------------------------------------ |
 | `-map`        | _(required)_ | Path to the Tiled map file in JSON format        |
 | `-dest`       | `.`          | Destination directory for the generated files    |
-| `-dimension`  | `20x11`      | Width × height of each scene (in tiles)          |
+| `-dimension`  | _(optional)_ | Width × height of each scene in tiles (e.g. `20x11`). When omitted, scene and tile attributes generation is disabled. |
 | `-fileprefix` | `master`     | Prefix used for all generated output files       |
 
 ### Example
@@ -62,10 +64,16 @@ tiled2map -map <path/to/map.json> [-dest <path>] [-dimension <WxH>] [-fileprefix
 tiled2map -map map.json -dest ./output -dimension 20x11 -fileprefix master
 ```
 
+Without scene generation:
+
+```
+tiled2map -map map.json -dest ./output -fileprefix master
+```
+
 During execution, the tool prints a summary of the map and tile information:
 
 ```
-Tiled2map version: 1.0.0, git commit: abc1234
+Tiled2map version: 1.1.0, git commit: abc1234
 
 Number of scenes: 4
 Scene dimension: 20x11
@@ -74,6 +82,7 @@ Scene size: 220 bytes
 Number of tiles: 42
 Tile dimension: 16x16
 Tile size: 256 bytes
+Tileset size: 10752 bytes
 
 Done!
 ```
@@ -86,6 +95,14 @@ output/master-ts.til
 output/master-wrld.map
 output/master-refs.inc
 output/master-scne.inc
+```
+
+Without `-dimension`, only the atlas and refs files are generated:
+
+```
+output/master-ts.png
+output/master-ts.til
+output/master-refs.inc
 ```
 
 ## Output File Formats
@@ -108,7 +125,7 @@ The file contains no header. Both layers are merged: background tiles first, fol
 
 ### `-refs.inc` — Assembly Tile Properties
 
-The file declares a `<prefix>_tileset_buffer` sized to hold all tile pixel data (`tileWidth × tileHeight × tileCount` bytes), followed by ASM constants for tile dimensions and count, and the `<prefix>_tiles_props` table with one byte per tile. All buffer/label names are lowercase and prefixed with the file prefix; constants are uppercase.
+The file declares a `<prefix>_tileset_buffer` sized to hold all tile pixel data (`tileWidth × tileHeight × tileCount` bytes), followed by ASM constants for tile dimensions and count. When `-dimension` is specified, a `<prefix>_tiles_attributes` table with one byte per tile is also included. All buffer/label names are lowercase and prefixed with the file prefix; constants are uppercase.
 
 ```asm
 ; GENERATED BY tiled2map (https://github.com/laghoule/tiled2map)
@@ -119,7 +136,7 @@ MASTER_TILE_WIDTH EQU 16
 MASTER_TILE_HEIGHT EQU 16
 MASTER_TILES_COUNT EQU 3
 
-master_tiles_props LABEL BYTE
+master_tiles_attributes LABEL BYTE
   DB 00000000b ; Index: 0 (GID:   6 Source: set_0.png)
   DB 00000001b ; Index: 1 (GID:  24 Source: basictiles.png)
   ...
@@ -156,7 +173,7 @@ The scene offset formula is: `((y × numScenesX) + x) × sceneTiles`, where `sce
 
 ### Prerequisites
 
-- Go 1.26 or later
+- Go 1.27 or later
 
 The templates are embedded directly in the binary at compile time — no external template files are needed at runtime.
 
@@ -165,7 +182,7 @@ The templates are embedded directly in the binary at compile time — no externa
 ```
 git clone https://github.com/laghoule/tiled2map.git
 cd tiled2map
-go build -o tiled2map ./cmd/main.go
+go build -o tiled2map ./cmd/tiled2map
 ```
 
 ### Build with version information
@@ -173,7 +190,7 @@ go build -o tiled2map ./cmd/main.go
 ```
 go build \
   -ldflags="-X 'main.version=1.0.0' -X 'main.gitCommit=$(git rev-parse --short HEAD)'" \
-  -o tiled2map ./cmd/main.go
+  -o tiled2map ./cmd/tiled2map
 ```
 
 ### Docker

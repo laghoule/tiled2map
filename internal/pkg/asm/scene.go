@@ -13,7 +13,8 @@ import (
 var tmplFS embed.FS
 
 const (
-	layersLen = 2 // bg & fg
+	sceneTmplFile = "tmpl/scene.tmpl"
+	layersLen     = 2 // bg & fg
 )
 
 // SceneData represents the data required to generate a single scene entry.
@@ -44,26 +45,30 @@ type SceneTemplatePayload struct {
 
 // createScene generates a scene template based on the provided dimension.
 func (a *ASMLinker) createScene(sceneDimension Dimension) error {
+	if sceneDimension == (Dimension{}) {
+		return nil
+	}
+
 	scenes := []SceneData{}
 	sceneTiles := sceneDimension.Width * sceneDimension.Height
-	numScenesX := int(a.TileMap.Width) / sceneDimension.Width
-	numScenesY := int(a.TileMap.Height) / sceneDimension.Height
+	numScenesX := int(a.tileMap.Width) / sceneDimension.Width
+	numScenesY := int(a.tileMap.Height) / sceneDimension.Height
 
 	// Scene neighbor helper
 	getNeighbor := func(sx, sy int, cond bool) string {
 		if cond {
-			return fmt.Sprintf("OFFSET %s_scene_%d_%d", a.FileOutput.FilePrefix, sx, sy)
+			return fmt.Sprintf("OFFSET %s_scene_%d_%d", a.fileOutput.FilePrefix, sx, sy)
 		}
 		return "0"
 	}
 
-	for y := range int(a.TileMap.Height) / sceneDimension.Height {
-		for x := range int(a.TileMap.Width) / sceneDimension.Width {
+	for y := range int(a.tileMap.Height) / sceneDimension.Height {
+		for x := range int(a.tileMap.Width) / sceneDimension.Width {
 			// offset is the 2D -> 1D transformation
 			currentOffset := ((y * numScenesX) + x) * sceneTiles
 
 			scenes = append(scenes, SceneData{
-				Name:      fmt.Sprintf("%s_scene_%d_%d", a.FileOutput.FilePrefix, x, y),
+				Name:      fmt.Sprintf("%s_scene_%d_%d", a.fileOutput.FilePrefix, x, y),
 				MapOffset: currentOffset,
 				NorthName: getNeighbor(x, y-1, y > 0),
 				SouthName: getNeighbor(x, y+1, y < numScenesY-1),
@@ -73,7 +78,7 @@ func (a *ASMLinker) createScene(sceneDimension Dimension) error {
 		}
 	}
 
-	filename := filepath.Join(a.FileOutput.Path, fmt.Sprintf("%s-scne%s", a.FileOutput.FilePrefix, includeExt))
+	filename := filepath.Join(a.fileOutput.Path, fmt.Sprintf("%s-scne%s", a.fileOutput.FilePrefix, includeExt))
 	sceneFile, err := os.Create(filename)
 	if err != nil {
 		return fmt.Errorf("failed to create scene file: %w", err)
@@ -81,16 +86,16 @@ func (a *ASMLinker) createScene(sceneDimension Dimension) error {
 	defer sceneFile.Close()
 
 	// BufferSize is the total number of bytes needed for bg/fg map buffers
-	bufferSize := ((a.TileMap.Width * a.TileMap.Height) * layersLen)
-	mapLayerSize := a.TileMap.Width * a.TileMap.Height
+	bufferSize := ((a.tileMap.Width * a.tileMap.Height) * layersLen)
+	mapLayerSize := a.tileMap.Width * a.tileMap.Height
 
 	payload := SceneTemplatePayload{
-		Prefix:     a.FileOutput.FilePrefix,
+		Prefix:     a.fileOutput.FilePrefix,
 		BufferSize: bufferSize,
 		MapData: MapData{
 			Dimension: Dimension{
-				Width:  a.TileMap.Width,
-				Height: a.TileMap.Height,
+				Width:  a.tileMap.Width,
+				Height: a.tileMap.Height,
 			},
 			LayerSize: mapLayerSize,
 		},
@@ -105,7 +110,7 @@ func (a *ASMLinker) createScene(sceneDimension Dimension) error {
 		"toUpper": strings.ToUpper,
 	}
 
-	tpl, err := template.New("scene.tmpl").Funcs(funcMap).ParseFS(tmplFS, "tmpl/scene.tmpl")
+	tpl, err := template.New("scene.tmpl").Funcs(funcMap).ParseFS(tmplFS, sceneTmplFile)
 	if err != nil {
 		return fmt.Errorf("failed to parse scene template: %w", err)
 	}

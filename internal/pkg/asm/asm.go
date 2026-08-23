@@ -12,10 +12,11 @@ const (
 
 // ASMLinker links the map to scene and language generated references
 type ASMLinker struct {
-	FileOutput   FileOutput
-	TileMap      *tiled.Map
-	TilesInfo    []tiled.TileInfo
-	GIDToLocalID tiled.GIDToLocalTIL
+	generateAttributes bool
+	fileOutput         FileOutput
+	tileMap            *tiled.Map
+	tilesInfo          []tiled.TileInfo
+	gIDToLocalID       tiled.GIDToLocalTIL
 }
 
 // Dimension represents the dimensions of a map.
@@ -33,18 +34,19 @@ type FileOutput struct {
 // NewASMLinker creates a new ASMLinker.
 func NewASMLinker(destPath, filePrefix string, tileMap *tiled.Map, tilesInfo []tiled.TileInfo, gidToLocalID tiled.GIDToLocalTIL) *ASMLinker {
 	return &ASMLinker{
-		FileOutput: FileOutput{
+		fileOutput: FileOutput{
 			Path:       destPath,
 			FilePrefix: filePrefix,
 		},
-		TileMap:      tileMap,
-		TilesInfo:    tilesInfo,
-		GIDToLocalID: gidToLocalID,
+		tileMap:      tileMap,
+		tilesInfo:    tilesInfo,
+		gIDToLocalID: gidToLocalID,
 	}
 }
 
 // CreateAndSave creates the assembly files, the map and saves them to disk.
 func (a *ASMLinker) CreateAndSave(sceneDimension Dimension) error {
+	a.generateAttributes = sceneDimension != (Dimension{})
 	if err := a.createTilesRefs(); err != nil {
 		return err
 	}
@@ -62,12 +64,16 @@ func (a *ASMLinker) CreateAndSave(sceneDimension Dimension) error {
 
 // ExtractDimension extracts the dimension from a string.
 func ExtractDimension(dimension string) (Dimension, error) {
-	var d Dimension
+	var dim Dimension
 
-	_, err := fmt.Sscanf(dimension, "%dx%d", &d.Width, &d.Height)
+	if dimension == "" {
+		return dim, nil
+	}
+
+	_, err := fmt.Sscanf(dimension, "%dx%d", &dim.Width, &dim.Height)
 	if err != nil {
 		return Dimension{}, fmt.Errorf("invalid dimension: %s", dimension)
 	}
 
-	return d, nil
+	return dim, nil
 }
