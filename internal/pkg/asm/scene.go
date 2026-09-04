@@ -13,6 +13,8 @@ import (
 var tmplFS embed.FS
 
 const (
+    tilesetSuffix = "-ts"
+    sceneSuffix = "-scne"
 	sceneTmplFile = "tmpl/scene.tmpl"
 	layersLen     = 2 // bg & fg
 )
@@ -78,7 +80,14 @@ func (a *ASMLinker) createScene(sceneDimension Dimension) error {
 		}
 	}
 
-	filename := filepath.Join(a.fileOutput.Path, fmt.Sprintf("%s-scne%s", a.fileOutput.FilePrefix, includeExt))
+	numScene := (a.tileMap.Width * a.tileMap.Height) / (sceneDimension.Width * sceneDimension.Height)
+	fileSuffix := "-ts"
+	if numScene > 1 {
+		fileSuffix = "-scne"
+	}
+
+	// file format: <prefix>-scne.<ext> || <prefix>.<ext>
+	filename := filepath.Join(a.fileOutput.Path, fmt.Sprintf("%s%s%s", a.fileOutput.FilePrefix, fileSuffix, includeExt))
 	sceneFile, err := os.Create(filename)
 	if err != nil {
 		return fmt.Errorf("failed to create scene file: %w", err)

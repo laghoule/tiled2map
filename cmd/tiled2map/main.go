@@ -20,7 +20,8 @@ func main() {
 	fmt.Printf("Tiled2map version: %s, git commit: %s\n", version, gitCommit)
 	mapFile := flag.String("map", "", "Path to the Tiled map file (JSON format)")
 	destPath := flag.String("dest", ".", "Destination path for the generated files")
-	sceneDimension := flag.String("dimension", "", "Dimension of each scenes in tile (width x height)")
+	gridDimension := flag.String("dimension", "", "Dimension of the grid in the map (width x height)")
+	generateAttributes := flag.Bool("attributes", true, "Generate attributes for the tiles") // TODO: enable when scene mode detected?
 	filePrefix := flag.String("fileprefix", "master", "Prefix for the generated files")
 	flag.Parse()
 
@@ -33,6 +34,10 @@ func main() {
 		exitWithError(err)
 	}
 
+	if *gridDimension == "" {
+		exitWithError(fmt.Errorf("grid dimension not specified"))
+	}
+
 	tileMap, err := tiled.NewMap(*mapFile)
 	if err != nil {
 		exitWithError(err)
@@ -42,7 +47,7 @@ func main() {
 	tilesInfo := tiled.GetSortedTilesInfo(allGIDs, tileMap.TileSets)
 	gidLocalTIL := tiled.GetGIDToLocalTIL(allGIDs)
 
-	sceneDim, err := asm.ExtractDimension(*sceneDimension)
+	gridDim, err := asm.ExtractDimension(*gridDimension)
 	if err != nil {
 		exitWithError(err)
 	}
@@ -51,19 +56,18 @@ func main() {
 		exitWithError(fmt.Errorf("no tiles found"))
 	}
 
-	if sceneDim == (asm.Dimension{}) {
-		fmt.Printf("\nScene dimension not specified, turn off scene and tiles attributes creation.\n\n")
-
-	} else {
-		fmt.Printf("Number of scenes: %d\n", (tileMap.Width*tileMap.Height)/(sceneDim.Width*sceneDim.Height))
-		fmt.Printf("Scene dimension: %dx%d\n", sceneDim.Width, sceneDim.Height)
-		fmt.Printf("Scene size: %d bytes\n\n", sceneDim.Width*sceneDim.Height)
+	numScene := (tileMap.Width * tileMap.Height) / (gridDim.Width * gridDim.Height)
+	if numScene > 1 {
+		fmt.Println("Scene mode enabled")
+		fmt.Printf("\nNumber of scenes: %d\n", numScene)
+		fmt.Printf("Scene dimension: %dx%d\n", gridDim.Width, gridDim.Height)
+		fmt.Printf("Scene size: %d bytes\n", gridDim.Width*gridDim.Height)
 	}
 
 	numTiles := len(tilesInfo)
 	tileSize := tilesInfo[0].Dimension.Width * tilesInfo[0].Dimension.Height
 	tilesetSize := numTiles * tileSize
-	fmt.Printf("Number of tiles: %d\n", numTiles)
+	fmt.Printf("\nNumber of tiles: %d\n", numTiles)
 	fmt.Printf("Tile dimension: %dx%d\n", tilesInfo[0].Dimension.Width, tilesInfo[0].Dimension.Height)
 	fmt.Printf("Tile size: %d bytes\n", tileSize)
 	fmt.Printf("Tileset size: %d bytes\n", tilesetSize)
@@ -80,14 +84,13 @@ func main() {
 	}
 
 	// Create and save the ASM file with the extracted scene dimension
-	asmLinker := asm.NewASMLinker(*destPath, *filePrefix, tileMap, tilesInfo, gidLocalTIL)
-	err = asmLinker.CreateAndSave(sceneDim)
+	asmLinker := asm.NewASMLinker(*destPath, *filePrefix, tileMap, tilesInfo, gidLocalTIL, *generateAttributes)
+	err = asmLinker.CreateAndSave(gridDim)
 	if err != nil {
 		exitWithError(err)
 	}
 
-	fmt.Println("")
-	fmt.Println("Done!")
+	fmt.Println("\nDone!")
 }
 
 // validateDestPath validates the destination path for the generated files
